@@ -11,8 +11,8 @@ import {
 import { BsArrowUpRight } from "react-icons/bs";
 import { IconType } from "react-icons";
 
-import IMG1 from "../../../assets/Ecommerce_Frontend.png";
-import IMG2 from "../../../assets/google_keep.jpg";
+import IMG1 from "../../../assets/meta_tag.png";
+import IMG2 from "../../../assets/aiVideoSummarizer.png";
 import IMG3 from "../../../assets/to-do.png";
 import IMG8 from "../../../assets/auditImage.png";
 
@@ -65,14 +65,14 @@ const Portfolio: React.FC = () => {
     {
       id: 1,
       imgSrc: IMG1.src,
-      title: "Cura - Lifestyle E-commerce Platform",
+      title: "MetaForge - Create any metatags for your website",
       description:
-        "A full-stack e-commerce solution with modern UI/UX, shopping cart, and payment integration.",
-      githubLink: "https://github.com/aditya74841/Ecommerce_Frontend.github.io",
-      liveDemoLink: "https://p2.iamadityaranjan.com/",
-      technologies: ["React", "Node.js", "MongoDB", "Express"],
+        "Metagorge simplifies website SEO by instantly generating perfect, optimized meta tags, titles, and descriptions to boost your search ranking.",
+      githubLink: "https://github.com/aditya74841/Meta_tag_generator",
+      liveDemoLink: "https://metaforge.allaboutcse.com/",
+      technologies: ["React", "Nextjs.js", "Tailwindcss",  "Shadcn"],
       featured: true,
-      category: "Full Stack",
+      category: "Frontend",
     },
     {
       id: 2,
@@ -89,14 +89,14 @@ const Portfolio: React.FC = () => {
     {
       id: 3,
       imgSrc: IMG2.src,
-      title: "Google Keep Clone",
+      title: "Video Summarizer using ai",
       description:
-        "A feature-rich note-taking app with real-time sync, labels, and advanced search functionality.",
-      githubLink: "https://github.com/aditya74841/React_TODO_frontend",
-      liveDemoLink: "https://p3.iamadityaranjan.com/",
-      technologies: ["React", "Firebase", "Material-UI"],
+        "This AI tool quickly watches videos and reads the transcript to create a short summary, helping you save time.",
+      githubLink: "https://github.com/aditya74841/Ai_Video_Summarizer",
+      liveDemoLink: "https://ai-video-summarizer-qrmb.vercel.app/",
+      technologies: ["React", "Shadcn","Nextjs", "Shadcn","MongoDB","Nodejs", "Express" , "Gemini API","ffmpeg","TypeScript"," TailwindCSS",],
       featured: true,
-      category: "Frontend",
+      category: "Full Stack",
     },
     {
       id: 4,
