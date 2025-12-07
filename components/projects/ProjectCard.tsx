@@ -15,6 +15,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const isHighComplexity = project.complexity === "High";
+  const techStack = project.techStack ?? [];
 
   return (
     <div className="group relative flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-xl hover:border-blue-300/50 transition-all duration-300">
@@ -76,7 +77,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           {/* Tech Stack Badges - Compact Style */}
           <div>
             <div className="flex flex-wrap gap-1.5">
-              {project.techStack.slice(0, 5).map((tech) => (
+              {techStack.slice(0, 5).map((tech) => (
                 <span
                   key={tech}
                   className="px-2 py-1 text-xs font-medium text-slate-600 bg-slate-100 rounded-md border border-slate-200"
@@ -84,9 +85,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                   {tech}
                 </span>
               ))}
-              {project.techStack.length > 5 && (
+              {techStack.length > 5 && (
                 <span className="px-2 py-1 text-xs font-medium text-slate-400 bg-slate-50 rounded-md border border-slate-100">
-                  +{project.techStack.length - 5}
+                  +{techStack.length - 5}
                 </span>
               )}
             </div>

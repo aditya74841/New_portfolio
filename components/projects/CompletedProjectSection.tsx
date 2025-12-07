@@ -17,7 +17,8 @@ const CompletedProjectsSection: React.FC<Props> = ({ projects, isVisible }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
         {projects.map((project, index) => (
-          <ProjectCard key={project.id} project={project} index={index} isVisible={isVisible} />
+          <ProjectCard key={project.id} project={project} />
+
         ))}
       </div>
     </div>
