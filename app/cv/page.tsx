@@ -73,8 +73,8 @@ const Resume: React.FC = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="lg:col-span-1 bg-white shadow-2xl rounded-3xl p-8 border border-slate-200 lg:sticky lg:top-6 h-fit">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-linear-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">AR</span>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+              <img src="/letter-a.png" alt="A" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-3xl font-bold mb-2 text-gray-900">
               Aditya Ranjan
