@@ -23,11 +23,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div
-            className={`w-2 h-2 rounded-full ${
-              project.status === "In Progress"
+            className={`w-2 h-2 rounded-full ${project.status === "In Progress"
                 ? "bg-amber-500 animate-pulse"
                 : "bg-emerald-500"
-            }`}
+              }`}
           />
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
             {project.category}
@@ -100,7 +99,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
             <div className="flex items-center gap-1 hover:text-blue-600 cursor-pointer transition-colors">
               <Link
-                href={`/projects/details/`}
+                href={`/projects/${project.id}`}
                 className="flex items-center gap-1"
               >
                 View Details <ArrowUpRight size={14} />

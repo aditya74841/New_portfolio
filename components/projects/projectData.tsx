@@ -87,6 +87,7 @@ export const projectsData: {
       title: "Url Shortner",
       description:
         "A lightning-fast URL shortening service with custom aliases, comprehensive analytics, and QR code generation. Features real-time click tracking and user dashboard.",
+      longDescription: "A powerful URL shortener built for performance and scalability. It allows users to create custom short links, track real-time analytics like click location and device type, and generate QR codes for offline sharing. The dashboard provides a comprehensive view of link performance.",
       image: "/api/placeholder/400/300",
       category: "web-app",
       techStack: ["React", "Node.js", "MongoDB", "Express", "Chart.js"],
@@ -98,6 +99,16 @@ export const projectsData: {
         "QR code generation",
         "Link expiration",
         "Bulk operations",
+      ],
+      challenges: [
+        {
+          problem: "High concurrency link redirection",
+          solution: "Implemented Redis caching to store frequently accessed links, reducing database load and response time."
+        },
+        {
+          problem: "Tracking unique visitors without cookies",
+          solution: "Used fingerprinting techniques and IP hashing to estimate unique visitors while respecting privacy."
+        }
       ],
       completedDate: "March 2025",
       complexity: "Low",
@@ -252,6 +263,7 @@ export const projectsData: {
       title: "Docs Hub - Technical Documentation Platform",
       description:
         "A comprehensive technical documentation platform designed to centralize development resources, API references, and project guides for developers and teams.",
+      longDescription: "Docs Hub is a centralized platform for managing and viewing technical documentation. It provides a seamless experience for developers to write, organize, and share API references and project guides. With support for MDX, it allows for rich content creation including live code snippets and interactive components.",
       image: "/api/placeholder/400/300",
       category: "documentation",
       techStack: ["React", "Next.js", "Tailwind CSS", "MDX", "Vercel"],
@@ -263,6 +275,16 @@ export const projectsData: {
         "Code examples",
         "Version control",
         "Dark/light mode",
+      ],
+      challenges: [
+        {
+          problem: "Managing large MDX content efficiently",
+          solution: "Implemented incremental static regeneration (ISR) to handle content updates without rebuilding the entire site."
+        },
+        {
+          problem: "Real-time search across documentation",
+          solution: "Integrated Algolia search for instant and relevant search results."
+        }
       ],
       completedDate: "November 2024",
       gradient: "from-blue-500 via-indigo-500 to-purple-500",
@@ -340,117 +362,3 @@ export const projectsData: {
 };
 
 export default projectsData;
-
-// // projectData.ts
-// import React from 'react';
-// import { Zap, Globe, ShoppingBag, Layout, Database, MessageSquare, FileText, Search, Terminal } from 'lucide-react';
-
-// export interface Project {
-//   id: string;
-//   title: string;
-//   description: string;
-//   longDescription?: string;
-//   image?: string;
-//   category: string; // Made mandatory
-//   techStack: string[];
-//   githubLink?: string;
-//   liveDemoLink?: string;
-//   features?: string[];
-//   completedDate?: string;
-//   status?: string;
-//   featured?: boolean; // New field to highlight best work
-//   complexity?: 'High' | 'Medium' | 'Low'; // New field for depth
-// }
-
-// export interface Category {
-//   id: string;
-//   name: string;
-//   count: number;
-// }
-
-// export const projectsData = {
-//   currentProjects: [
-//     {
-//       id: 'current-1',
-//       title: 'Audit Pro',
-//       description: 'Enterprise-grade auditing system for corporate compliance.',
-//       status: 'In Progress',
-//       category: 'enterprise',
-//       techStack: ['React', 'Node.js', 'MongoDB', 'Next.js', 'Docker'],
-//       featured: true,
-//       complexity: 'High',
-
-//     },
-//   ],
-//   completedProjects: [
-//     {
-//       id: 'proj-9',
-//       title: 'Docs Hub',
-//       description: 'Centralized technical documentation platform with MDX support and version control.',
-//       category: 'dev-tools',
-//       techStack: ['Next.js', 'Tailwind', 'MDX', 'Vercel'],
-//       githubLink: 'https://github.com/aditya74841/LiveDocEditor',
-//       liveDemoLink: 'https://docs.iamadityaranjan.com',
-//       featured: true,
-//       complexity: 'Medium',
-//       completedDate: 'Nov 2024',
-
-//     },
-//     {
-//       id: 'proj-11',
-//       title: 'MetaForge Pro',
-//       description: 'SEO suite generating Open Graph/Twitter cards with real-time preview validation.',
-//       category: 'dev-tools',
-//       techStack: ['React', 'Next.js', 'Tailwind Css'],
-//       githubLink: 'https://github.com/aditya74841/Meta_tag_generator',
-//       liveDemoLink: 'https://metaforge.allaboutcse.com',
-//       featured: true,
-//       complexity: 'High',
-//       completedDate: 'July 2025',
-//     },
-//     {
-//       id: 'proj-2',
-//       title: 'Cura Commerce',
-//       description: 'Full-stack e-commerce solution with Stripe integration and order management.',
-//       category: 'e-commerce',
-//       techStack: ['React', 'Redux', 'Stripe', 'Firebase'],
-//       githubLink: 'https://github.com',
-//       liveDemoLink: 'https://p2.iamadityaranjan.com/',
-//       featured: false,
-//       complexity: 'Medium',
-//       completedDate: 'Feb 2025',
-//     },
-//     {
-//       id: 'proj-7',
-//       title: 'WhatsApp Clone+',
-//       description: 'Real-time messaging app featuring E2E encryption and WebRTC video calls.',
-//       category: 'real-time',
-//       techStack: ['Socket.io', 'WebRTC', 'Node.js', 'MongoDB'],
-//       githubLink: 'https://github.com',
-//       featured: true,
-//       complexity: 'High',
-//       completedDate: 'Sept 2024',
-//     },
-//     {
-//       id: 'proj-8',
-//       title: 'QuoteVerse API',
-//       description: 'RESTful API service with rate limiting, caching, and ML-based recommendations.',
-//       category: 'backend',
-//       techStack: ['Node.js', 'Express', 'Redis', 'Swagger'],
-//       liveDemoLink: 'https://quote-backend.onrender.com',
-//       featured: false,
-//       complexity: 'Medium',
-//       completedDate: 'Aug 2024',
-//     },
-//     // ... include other projects here
-//   ] as Project[],
-
-//   categories: [
-//     { id: 'all', name: 'All Work', count: 12 },
-//     { id: 'dev-tools', name: 'Dev Tools', count: 2 },
-//     { id: 'enterprise', name: 'Enterprise', count: 1 },
-//     { id: 'e-commerce', name: 'E-Commerce', count: 1 },
-//     { id: 'real-time', name: 'Real-Time', count: 2 },
-//     { id: 'backend', name: 'Backend/API', count: 1 },
-//   ]
-// };

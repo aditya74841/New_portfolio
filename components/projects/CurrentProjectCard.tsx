@@ -5,33 +5,31 @@ import { Calendar, Github, ExternalLink, BookOpen } from 'lucide-react';
 import type { Project } from './projectData';
 import { ProgressBar } from './Utility/ProgressBar';
 import { TechStackBadges } from './Utility/TechStackBadges';
+import Link from "next/link";
 
 type Props = {
   project: Project;
   index: number;
   isVisible: boolean;
-  onLearnMore?: () => void;
 };
 
-const CurrentProjectCard: React.FC<Props> = ({ project, index, isVisible, onLearnMore }) => {
+const CurrentProjectCard: React.FC<Props> = ({ project, index, isVisible }) => {
   return (
     <div
-      className={`relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 group ${
-        isVisible ? 'animate-fadeInUp' : 'opacity-0'
-      }`}
+      className={`relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 group ${isVisible ? 'animate-fadeInUp' : 'opacity-0'
+        }`}
       style={{ animationDelay: `${index * 200}ms` }}
     >
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded-full bg-gradient-to-r ${
-                project.priority === 'high'
-                  ? 'from-red-500 to-orange-500'
-                  : project.priority === 'medium'
-                    ? 'from-yellow-500 to-amber-500'
-                    : 'from-green-500 to-emerald-500'
-              } text-white transition-transform duration-300 group-hover:scale-110`}
+              className={`p-2 rounded-full bg-gradient-to-r ${project.priority === 'high'
+                ? 'from-red-500 to-orange-500'
+                : project.priority === 'medium'
+                  ? 'from-yellow-500 to-amber-500'
+                  : 'from-green-500 to-emerald-500'
+                } text-white transition-transform duration-300 group-hover:scale-110`}
             >
               {project.icon}
             </div>
@@ -80,15 +78,13 @@ const CurrentProjectCard: React.FC<Props> = ({ project, index, isVisible, onLear
             </a>
           )}
 
-          {onLearnMore && (
-            <button
-              onClick={onLearnMore}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-all duration-300 hover:shadow-lg"
-            >
-              <BookOpen className="w-4 h-4" />
-              Learn More
-            </button>
-          )}
+          <Link
+            href={`/projects/${project.id}`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-all duration-300 hover:shadow-lg"
+          >
+            <BookOpen className="w-4 h-4" />
+            Learn More
+          </Link>
         </div>
       </div>
     </div>
@@ -97,13 +93,12 @@ const CurrentProjectCard: React.FC<Props> = ({ project, index, isVisible, onLear
 
 const StatusBadge: React.FC<{ status?: string }> = ({ status }) => (
   <span
-    className={`px-3 py-1 rounded-full text-xs font-medium ${
-      status === 'In Development'
-        ? 'bg-yellow-100 text-yellow-800'
-        : status === 'Planning'
-          ? 'bg-blue-100 text-blue-800'
-          : 'bg-green-100 text-green-800'
-    }`}
+    className={`px-3 py-1 rounded-full text-xs font-medium ${status === 'In Development'
+      ? 'bg-yellow-100 text-yellow-800'
+      : status === 'Planning'
+        ? 'bg-blue-100 text-blue-800'
+        : 'bg-green-100 text-green-800'
+      }`}
   >
     {status}
   </span>
