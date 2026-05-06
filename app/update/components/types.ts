@@ -5,7 +5,7 @@ export interface JournalEntry {
     update: string;
     mood: string;
     why?: string;
-    screenTime?: { hours: number; minutes: number };
+    screenTime?: { hours: number; minutes: number; note?: string };
     qas: Array<{ question: string; answer: string }>;
     createdAt: string;
     updatedAt: string;
