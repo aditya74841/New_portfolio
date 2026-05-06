@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     images: ["/twitter-image.jpg"],
   },
   verification: {
-    google: "your-google-verification-code", // Add your Google verification code
+    google: "--oAyCpPJtSjfiGmpio3ctk6fX-fFRkSOuu0vjag-_k",
   },
 };
 

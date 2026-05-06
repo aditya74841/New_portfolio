@@ -1,8 +1,8 @@
 import axios from "axios";
-import { LOCAL_SERVER_API_URL } from "../../constant";
+import { SERVER_API_URL } from "../../constant";
 import type { ApiResponse, Idea, IdeaStatus } from "../types";
 
-const API_URL = LOCAL_SERVER_API_URL;
+const API_URL = SERVER_API_URL;
 
 const authHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`,

@@ -52,7 +52,8 @@ const JournalEntryList: React.FC<JournalEntryListProps> = ({
                     {/* Date Header */}
                     <div className="flex items-center gap-3 mb-3">
                         <div className="text-amber-500 text-sm font-medium">
-                            {formatDate(dayEntries[0].createdAt)}
+                            {formatDate(dayEntries[0].date)}
+                          
                         </div>
                         <div className="flex-1 h-px bg-slate-800" />
                     </div>

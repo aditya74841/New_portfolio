@@ -104,13 +104,13 @@ const JournalPage: React.FC = () => {
     // Sort by newest first
     const sorted = [...filtered].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
     // Group by date
     const groups: { [key: string]: JournalEntry[] } = {};
     sorted.forEach((entry) => {
-      const dateKey = new Date(entry.createdAt).toDateString();
+      const dateKey = new Date(entry.date).toDateString();
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }

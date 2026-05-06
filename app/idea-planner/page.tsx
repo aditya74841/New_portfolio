@@ -20,7 +20,7 @@ const STATUS_OPTIONS: Array<{ value: IdeaStatus; label: string }> = [
 
 export default function IdeaPlannerPage() {
   const router = useRouter();
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user, token, isLoading: isAuthLoading, logout } = useAuth();
 
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,6 +125,15 @@ export default function IdeaPlannerPage() {
               >
                 ← Back to Admin
               </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  window.location.href = "/login";
+                }}
+                className="px-4 py-2 text-red-400 hover:text-white hover:bg-red-900/50 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
               <button
                 onClick={fetchIdeas}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition-colors"

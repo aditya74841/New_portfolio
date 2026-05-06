@@ -18,34 +18,6 @@ const Header = () => {
 
   return (
     <>
-      {/* <Helmet>
-                <title>Aditya Ranjan | Full Stack Web Developer Portfolio</title>
-                <meta
-                    name="description"
-                    content="I'm Aditya Ranjan, a Full Stack Web Developer skilled in the MERN stack. Explore my projects, experience, and services on my personal portfolio site."
-                />
-                <meta
-                    name="keywords"
-                    content="Aditya Ranjan, Full Stack Developer, MERN Developer, React Developer, Node.js, iamadityaranjan, Web Portfolio"
-                />
-                <meta name="author" content="Aditya Ranjan" />
-                <meta property="og:title" content="Aditya Ranjan | Full Stack Developer" />
-                <meta
-                    property="og:description"
-                    content="Explore the work and skills of Aditya Ranjan, a MERN Stack Developer based in India."
-                />
-                <meta property="og:image" content="https://iamadityaranjan.com/me.jpg" />
-                <meta property="og:url" content="https://iamadityaranjan.com/" />
-                <meta property="og:type" content="website" />
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Aditya Ranjan | Full Stack Developer" />
-                <meta
-                    name="twitter:description"
-                    content="Explore the portfolio and projects of Aditya Ranjan, Full Stack Web Developer (React, Node, MongoDB)."
-                />
-                <meta name="twitter:image" content="https://iamadityaranjan.com/me.jpg" />
-            </Helmet> */}
-
       <header
         id="home"
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -74,9 +46,6 @@ const Header = () => {
             {/* Text Content */}
             <div className="flex-1 text-center lg:text-left">
               <div className="space-y-6">
-                <h5 className="text-lg md:text-xl text-gray-300 font-light tracking-wide animate-fade-in">
-                  Hello, I'm
-                </h5>
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight animate-fade-in delay-200">
                   <span className="bg-linear-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
@@ -100,8 +69,10 @@ const Header = () => {
                                     creating web applications and applying current level of knowledge
                                     and skills in producing quality work. */}
                   A Full Stack Web Developer skilled in React, Node.js, Express,
-                  and MongoDB. I focus on building reliable, high-performance
-                  applications that deliver real-world impact.
+                  and MongoDB — with a growing focus on AI integration. I build
+                  reliable, high-performance applications and leverage LLMs,
+                  AI-powered APIs, and prompt engineering to deliver real-world
+                  impact.
                 </p>
 
                 <div className="animate-fade-in delay-500">

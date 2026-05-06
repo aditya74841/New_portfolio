@@ -168,7 +168,7 @@ export default function ProjectAdminPage() {
                             <button
                                 onClick={() => {
                                     logout();
-                                    router.push('/');
+                                    window.location.href = '/login';
                                 }}
                                 className="px-4 py-2 text-red-400 hover:text-white hover:bg-red-900/50 rounded-lg transition-colors"
                             >

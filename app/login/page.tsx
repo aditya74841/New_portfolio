@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../Providers";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { LOCAL_SERVER_API_URL } from "../constant";
+import { SERVER_API_URL } from "../constant";
 
 export default function LoginPage() {
     const { user, login } = useAuth();
@@ -22,7 +22,7 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await axios.post(`${LOCAL_SERVER_API_URL}/auth/dev`, { email, password });
+            const res = await axios.post(`${SERVER_API_URL}/auth/dev`, { email, password });
             const { token, user: userData } = res.data.data;
             login(token, userData);
             toast.success("Successfully logged in!");
