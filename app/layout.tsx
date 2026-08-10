@@ -47,15 +47,12 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    // Use absolute paths that resolve to the `public/` folder.
-    // Relative paths like "./icon.png" do not resolve to public and will not display.
-    // icon: "/letter-a.png",
-      icon: [
-    { url: '/letter-a.png', sizes: '32x32' },
-    { url: '/letter-a.png', sizes: '16x16' },
-  ],
-    shortcut: "/letter-a.png",
-    apple: "/letter-a.png",
+    icon: [
+      { url: "/logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo.png", sizes: "16x16", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
   openGraph: {
     type: "website",
@@ -95,11 +92,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Explicit favicon links — browsers sometimes cache or ignore metadata icons,
-            adding link tags in the head ensures the icon is delivered directly. */}
-        {/* <link rel="icon" href="/letter-a.png" />
-        <link rel="shortcut icon" href="/letter-a.png" />
-        <link rel="apple-touch-icon" href="/letter-a.png" /> */}
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
