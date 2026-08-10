@@ -80,6 +80,7 @@ export const projectsData: {
       priority: "high",
       icon: <Zap className="w-6 h-6" />,
     },
+    
   ],
   completedProjects: [
     {
@@ -351,13 +352,97 @@ export const projectsData: {
       complexity: "Low",
       duration: "6 months",
     },
+    {
+      id: "proj-12",
+      title: "AI Search Assistant",
+      description:
+        "An AI-powered chat and search application that combines live web retrieval with LLM reasoning to deliver grounded, context-aware answers.",
+      longDescription:
+        "AI Search Assistant is a full-stack, mini Perplexity-style experience that blends a modern React interface with a Node.js and Express API layer. The system sends user questions to a Groq-powered LLM, determines whether a live search is needed, and uses Tavily search results to generate grounded responses.",
+      image: "/assets/ai_browsing.png",
+      category: "ai",
+      techStack: [
+        "React",
+        "Vite",
+        "Tailwind CSS",
+        "Node.js",
+        "Express.js",
+        "Groq",
+        "Tavily API",
+        "express-rate-limit",
+      ],
+
+      githubLink: "https://github.com/aditya74841/Web-browsing-AI-agents",
+      liveDemoLink: "https://aibrowsing.iamadityaranjan.com/",
+      features: [
+        "LLM-based conversational workflow",
+        "Live web search tool calling",
+        "Grounded search-to-answer experience",
+        "Frontend and backend API integration",
+        "Deployment-ready Express server design",
+      ],
+      completedDate: "August 2025",
+      gradient: "from-cyan-500 via-blue-500 to-indigo-500",
+      difficulty: "Advanced",
+      complexity: "High",
+      duration: "2 months",
+    },
+    {
+      id: "proj-13",
+      title: "AI Video Summarizer",
+      description:
+        "A full-stack AI video intelligence platform that accepts uploads or YouTube links and turns content into executive-ready summaries, key insights, and editable transcripts.",
+      longDescription:
+        "AI Video Summarizer is a production-ready AI web application that processes local videos and YouTube videos through a real-time pipeline. It validates input, extracts audio, generates speech-to-text transcripts with Groq Whisper, and produces structured summaries using Groq LLaMA for both short and detailed reporting modes.",
+      image: "/assets/ai_video_summary.png",
+      category: "ai",
+      techStack: [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "Mongoose",
+        "FFmpeg",
+        "Groq API",
+        "Server-Sent Events",
+        "IndexedDB",
+      ],
+      githubLink: "https://github.com/aditya74841/Ai_Video_Summarizer",
+      liveDemoLink: "https://videosummary.iamadityaranjan.com/",
+      features: [
+        
+        "Real-time SSE processing pipeline",
+        "Editable transcript workflow",
+        "Short summary and detailed summary modes",
+        "Offline caching with IndexedDB",
+        "Browser-based export and cleanup flow",
+      ],
+      challenges: [
+        {
+          problem: "High latency in video-to-summary processing",
+          solution: "Implemented a real-time Server-Sent Events workflow to keep users informed while audio extraction, transcription, and summarization run asynchronously."
+        },
+        {
+          problem: "Video handling and retention constraints",
+          solution: "Added upload validation, FFmpeg-based processing, temporary file cleanup, and browser-side IndexedDB retention for cached history."
+        }
+      ],
+      completedDate: "August 2025",
+      gradient: "from-violet-500 via-fuchsia-500 to-pink-500",
+      difficulty: "Advanced",
+      complexity: "High",
+      duration: "4 days",
+    },
   ],
   categories: [
-    { id: "all", name: "All Projects", count: 11, icon: "🚀" },
+    { id: "all", name: "All Projects", count: 13, icon: "🚀" },
     { id: "web-app", name: "Web Apps", count: 1, icon: "💻" },
     { id: "e-commerce", name: "E-commerce", count: 1, icon: "🛒" },
     { id: "productivity", name: "Productivity", count: 3, icon: "📊" },
     { id: "api", name: "APIs", count: 1, icon: "🔗" },
+    { id: "ai", name: "AI", count: 2, icon: "🤖" },
   ],
 };
 

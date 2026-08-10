@@ -1,22 +1,14 @@
 "use client";
-import React, { useState, useEffect } from "react";
-// import { Link } from "react-router-dom";
-import {
-  FaGithub,
-  FaExternalLinkAlt,
-  FaEye,
-  FaCode,
-  FaStar,
-} from "react-icons/fa";
+
+import React, { useEffect, useState } from "react";
+import { FaGithub, FaExternalLinkAlt, FaCode, FaStar } from "react-icons/fa";
 import { BsArrowUpRight } from "react-icons/bs";
-import { IconType } from "react-icons";
-
-import IMG1 from "../../../assets/meta_tag.png";
-import IMG2 from "../../../assets/aiVideoSummarizer.png";
-import IMG3 from "../../../assets/to-do.png";
+import IMG1 from "../../../assets/MetaTagGenerator.png";
+import IMG2 from "../../../assets/portfolio2.jpg";
+import IMG3 from "../../../assets/portfolio3.jpg";
 import IMG8 from "../../../assets/auditImage.png";
+import IMG12 from "../../../assets/ai_browsing.png";
 
-// Type definitions
 interface Project {
   id: number;
   imgSrc: string;
@@ -29,14 +21,11 @@ interface Project {
   category: string;
 }
 
-interface ProjectCardProps {
-  project: Project;
-  index: number;
-}
-
-const Portfolio: React.FC = () => {
-  const [isVisible, setIsVisible] = useState<boolean>(false);
-  const [hoveredProject, setHoveredProject] = useState<number | null>(null);
+const ProjectCard: React.FC<{ project: Project; index: number }> = ({
+  project,
+  index,
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -48,7 +37,106 @@ const Portfolio: React.FC = () => {
       { threshold: 0.1 }
     );
 
-    const section = document.getElementById("portfolio");
+    const card = document.getElementById(`home-project-${project.id}`);
+    if (card) {
+      observer.observe(card);
+    }
+
+    return () => {
+      if (card) {
+        observer.unobserve(card);
+      }
+    };
+  }, [project.id]);
+
+  return (
+    <div
+      id={`home-project-${project.id}`}
+      className={`group bg-gray-900/80 rounded-2xl border border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-500 flex flex-col ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      }`}
+      style={{ transitionDelay: `${index * 120}ms` }}
+    >
+      {/* Image Preview */}
+      <div className="relative h-48 md:h-56 overflow-hidden bg-gray-950">
+        <img
+          src={project.imgSrc}
+          alt={project.title}
+          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-80"></div>
+        <div className="absolute top-3 right-3 bg-gray-950/80 backdrop-blur-md text-gray-300 px-3 py-1 rounded-full text-xs font-mono border border-gray-800">
+          {project.category}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2 group-hover:text-gray-200 transition-colors">
+            {project.title}
+          </h3>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            {project.description}
+          </p>
+        </div>
+
+        <div>
+          {/* Tech Badges */}
+          <div className="flex flex-wrap gap-1.5 mb-6">
+            {project.technologies.map((tech, idx) => (
+              <span
+                key={idx}
+                className="px-2.5 py-1 bg-gray-800/80 text-gray-300 rounded-md text-xs font-mono border border-gray-700/50"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+
+          {/* Action Links */}
+          <div className="flex items-center gap-4 pt-4 border-t border-gray-800/80">
+            <a
+              href={project.githubLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-gray-300 hover:text-white transition-colors"
+            >
+              <FaGithub className="text-base" />
+              <span>Source Code</span>
+            </a>
+            {project.liveDemoLink && (
+              <a
+                href={project.liveDemoLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:text-gray-300 ml-auto transition-colors"
+              >
+                <span>Live Demo</span>
+                <BsArrowUpRight className="text-xs" />
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Portfolio: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const section = document.querySelector("#portfolio");
     if (section) {
       observer.observe(section);
     }
@@ -60,41 +148,40 @@ const Portfolio: React.FC = () => {
     };
   }, []);
 
-  // Featured projects - your best work
   const featuredProjects: Project[] = [
     {
       id: 1,
       imgSrc: IMG1.src,
-      title: "MetaForge - Create any metatags for your website",
+      title: "MetaForge Pro — AI SEO Meta Tag Generator",
       description:
-        "Metagorge simplifies website SEO by instantly generating perfect, optimized meta tags, titles, and descriptions to boost your search ranking.",
+        "AI-powered SEO intelligence platform that crawls websites, analyzes page structure, and generates optimized meta titles, descriptions, Open Graph tags, Twitter Cards, and Schema.org structured data.",
       githubLink: "https://github.com/aditya74841/Meta_tag_generator",
       liveDemoLink: "https://metaforge.allaboutcse.com/",
-      technologies: ["React", "Nextjs.js", "Tailwindcss",  "Shadcn"],
+      technologies: ["React", "Next.js", "TailwindCSS", "Shadcn", "Node.js", "Express", "Groq", "Cheerio", "SEO Audit"],
       featured: true,
-      category: "Frontend",
+      category: "AI",
     },
     {
       id: 2,
       imgSrc: IMG8.src,
-      title: "Audit management system",
+      title: "Enterprise Audit Management System",
       description:
-        "End-to-end audit system for companies, enabling standardized audits across locations with multimedia support for detailed, flexible submissions.",
+        "End-to-end audit platform enabling standardized audits across locations with multimedia evidence support. Handles 200+ concurrent auditors with real-time sync.",
       githubLink: "https://github.com/aditya74841/Url_Shortner",
       liveDemoLink: "https://audit.iamadityaranjan.com/",
-      technologies: ["React", "Node.js", "MongoDB", "Express", "cloudinary", "Nextjs"],
+      technologies: ["React", "Next.js", "Node.js", "MongoDB", "Express", "Cloudinary"],
       featured: true,
       category: "Full Stack",
     },
     {
       id: 3,
       imgSrc: IMG2.src,
-      title: "Video Summarizer using ai",
+      title: "AI Video Summarizer",
       description:
-        "This AI tool quickly watches videos and reads the transcript to create a short summary, helping you save time.",
+        "AI-powered platform that transcribes and summarizes video content in seconds using Gemini API. Supports 50+ video formats with FFmpeg processing pipeline.",
       githubLink: "https://github.com/aditya74841/Ai_Video_Summarizer",
       liveDemoLink: "https://ai-video-summarizer-qrmb.vercel.app/",
-      technologies: ["React", "Shadcn","Nextjs", "Shadcn","MongoDB","Nodejs", "Express" , "Gemini API","ffmpeg","TypeScript"," TailwindCSS",],
+      technologies: ["Next.js", "Node.js", "MongoDB", "Gemini API", "FFmpeg", "TypeScript"],
       featured: true,
       category: "Full Stack",
     },
@@ -103,272 +190,92 @@ const Portfolio: React.FC = () => {
       imgSrc: IMG3.src,
       title: "Task Management System",
       description:
-        "A comprehensive todo application with user authentication, categories, and progress tracking.",
-      githubLink: "https://github.com",
+        "Comprehensive task manager with JWT authentication, categories, priority levels, and visual progress tracking. Built with security-first design.",
+      githubLink: "https://github.com/aditya74841",
       liveDemoLink: "https://p5.iamadityaranjan.com/login",
       technologies: ["React", "Node.js", "JWT", "MongoDB"],
       featured: true,
       category: "Full Stack",
     },
+    {
+      id: 5,
+      imgSrc: IMG12.src,
+      title: "AI Search Assistant",
+      description:
+        "An AI-powered chat and search application that combines live web retrieval with LLM reasoning to deliver grounded, context-aware answers.",
+      githubLink: "https://github.com/aditya74841/Web-browsing-AI-agents",
+      liveDemoLink: "https://aibrowsing.iamadityaranjan.com/",
+      technologies: ["React",
+        "Vite",
+        "Tailwind CSS",
+        "Node.js",
+        "Express.js",
+        "Groq",
+        "Tavily API",
+        "express-rate-limit",],
+      featured: true,
+      category: "Full Stack, AI",
+    },
   ];
 
-  const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
-    const isHovered = hoveredProject === project.id;
-
-    return (
-      <div
-        className={`group relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-500 ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-        }`}
-        style={{ animationDelay: `${index * 150}ms` }}
-        onMouseEnter={() => setHoveredProject(project.id)}
-        onMouseLeave={() => setHoveredProject(null)}
-      >
-        {/* Project Image */}
-        <div className="relative h-48 md:h-56 overflow-hidden">
-          <img
-            src={project.imgSrc}
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-
-          {/* Overlay */}
-          <div
-            className={`absolute inset-0 bg-linear-to-t from-black/60 to-transparent transition-opacity duration-300 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          ></div>
-
-          {/* Featured Badge */}
-          {project.featured && (
-            <div className="absolute top-4 left-4 flex items-center gap-1 bg-linear-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-              <FaStar className="text-xs" />
-              Featured
-            </div>
-          )}
-
-          {/* Category Badge */}
-          <div className="absolute top-4 right-4 bg-white/90 dark:bg-gray-900/90 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full text-xs font-medium">
-            {project.category}
-          </div>
-
-          {/* Hover Actions */}
-          <div
-            className={`absolute inset-0 flex items-center justify-center gap-4 transition-opacity duration-300 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <a
-              href={project.githubLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 bg-gray-900/90 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors duration-300 text-sm font-medium"
-            >
-              <FaGithub />
-              <span className="hidden sm:inline">Code</span>
-            </a>
-            {project.liveDemoLink && (
-              <a
-                href={project.liveDemoLink}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 bg-indigo-600/90 text-white px-4 py-2 rounded-full hover:bg-indigo-500 transition-colors duration-300 text-sm font-medium"
-              >
-                <FaExternalLinkAlt />
-                <span className="hidden sm:inline">Live Demo</span>
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Project Info */}
-        <div className="p-6">
-          <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-200 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">
-            {project.title}
-          </h3>
-
-          <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-4">
-            {project.description}
-          </p>
-
-          {/* Technologies */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {project.technologies.map((tech, techIndex) => (
-              <span
-                key={techIndex}
-                className="px-2 py-1 bg-linear-to-r from-indigo-500/20 to-purple-500/20 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-medium"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <a
-              href={project.githubLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-300 text-sm"
-            >
-              <FaCode />
-              View Code
-            </a>
-            {project.liveDemoLink && (
-              <a
-                href={project.liveDemoLink}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-300 text-sm"
-              >
-                <FaEye />
-                Live Demo
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <section
-      id="portfolio"
-      className="py-12 md:py-20 bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
-    >
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-linear-to-r from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-linear-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
+    <section id="portfolio" className="py-20 md:py-28 bg-gray-950 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div
-          className={`text-center mb-12 md:mb-16 transition-all duration-1000 ${
-            isVisible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-10"
+          className={`text-center mb-16 transition-all duration-1000 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <h5 className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 font-light mb-2">
-            My Recent Work
-          </h5>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4 md:mb-6">
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-widest mb-3">
+            Selected Works
+          </p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Featured Projects
           </h2>
-          <div className="w-16 md:w-24 h-1 bg-linear-to-r from-indigo-600 to-purple-600 mx-auto rounded-full"></div>
-          <p className="text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
-            Here are some of my best projects that showcase my skills in
-            full-stack development, modern web technologies, and user
-            experience design.
-          </p>
+          <div className="w-16 h-0.5 bg-gray-700 mx-auto"></div>
         </div>
 
-        {/* Featured Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8 mb-12 md:mb-16">
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-6xl mx-auto">
           {featuredProjects.map((project, index) => (
             <ProjectCard key={project.id} project={project} index={index} />
           ))}
         </div>
 
-        {/* Call to Action */}
+        {/* Call to Action Card */}
         <div
-          className={`text-center transition-all duration-1000 delay-600 ${
-            isVisible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-10"
+          className={`max-w-4xl mx-auto transition-all duration-1000 delay-400 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 md:p-12 shadow-xl border border-white/20 max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-left">
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                  Want to see more?
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  Explore my complete portfolio with detailed project
-                  breakdowns, live demos, and source code.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a
-                  href="/projects"
-                  className="group flex items-center gap-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                >
-                  View All Projects
-                  <BsArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
-                </a>
-
-                <a
-                  href="https://github.com/aditya74841"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 bg-gray-800 dark:bg-gray-700 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                >
-                  <FaGithub />
-                  GitHub Profile
-                </a>
-              </div>
+          <div className="bg-gray-900/80 rounded-3xl p-8 md:p-12 border border-gray-800 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Want to see more projects?
+              </h3>
+              <p className="text-gray-400 text-sm md:text-base">
+                Explore the complete project gallery with category filters and detailed breakdowns.
+              </p>
             </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div
-          className={`grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-12 md:mt-16 transition-all duration-1000 delay-800 ${
-            isVisible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-10"
-          }`}
-        >
-          <div className="text-center group">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-linear-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300">
-              <FaCode className="text-white text-lg md:text-2xl" />
+            <div className="flex flex-col sm:flex-row gap-4 shrink-0">
+              <a
+                href="/projects"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-gray-950 rounded-full font-semibold hover:bg-gray-200 transition-all duration-300"
+              >
+                <span>View All Projects</span>
+                <BsArrowUpRight className="text-xs" />
+              </a>
+              <a
+                href="https://github.com/aditya74841"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-800 text-white rounded-full font-semibold border border-gray-700 hover:border-gray-500 transition-all duration-300"
+              >
+                <FaGithub />
+                <span>GitHub</span>
+              </a>
             </div>
-            <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1 md:mb-2">
-              15+
-            </h3>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-              Projects
-            </p>
-          </div>
-
-          <div className="text-center group">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-linear-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300">
-              <FaGithub className="text-white text-lg md:text-2xl" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1 md:mb-2">
-              50+
-            </h3>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-              Repositories
-            </p>
-          </div>
-
-          <div className="text-center group">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300">
-              <FaExternalLinkAlt className="text-white text-lg md:text-2xl" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1 md:mb-2">
-              10+
-            </h3>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-              Live Demos
-            </p>
-          </div>
-
-          <div className="text-center group">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-linear-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300">
-              <FaStar className="text-white text-lg md:text-2xl" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1 md:mb-2">
-              4
-            </h3>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-              Featured
-            </p>
           </div>
         </div>
       </div>

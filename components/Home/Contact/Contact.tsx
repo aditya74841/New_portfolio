@@ -1,21 +1,27 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
-import { MdOutlineEmail, MdLocationOn, MdPhone } from "react-icons/md";
-import { BsWhatsapp, BsLinkedin } from "react-icons/bs";
+import React, { useState, useRef, FormEvent, ChangeEvent, useEffect } from "react";
 import {
+  MdOutlineEmail,
+  MdLocationOn,
+  MdPhone,
+  MdCheckCircle,
+  MdError,
+} from "react-icons/md";
+import {
+  FaWhatsapp,
+  FaLinkedinIn,
   FaUser,
   FaEnvelope,
   FaCommentDots,
   FaPaperPlane,
-  FaCheckCircle,
   FaTimesCircle,
 } from "react-icons/fa";
-import { BiLoaderAlt } from "react-icons/bi";
 import { IconType } from "react-icons";
-import { SERVER_API_URL } from "../../../app/constant";
 
-// Type definitions
+// Formspree static endpoint
+const FORMSPREE_URL = "https://formspree.io/f/myegepqk";
+
 interface FormData {
   name: string;
   email: string;
@@ -40,35 +46,80 @@ interface ContactOption {
   info: string;
   link: string;
   buttonText: string;
-  color: string;
-  bgColor: string;
 }
 
-interface ContactOptionProps {
+const ContactOptionCard: React.FC<{
   option: ContactOption;
   index: number;
-}
+}> = ({ option, index }) => {
+  const Icon = option.icon;
 
-interface NotificationProps {
-  notification: NotificationState;
-}
+  return (
+    <div
+      className="bg-gray-900/80 rounded-2xl p-6 border border-gray-800 hover:border-gray-700 transition-all duration-300 flex items-center justify-between group"
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform">
+          <Icon className="text-xl text-gray-200" />
+        </div>
+        <div>
+          <h4 className="font-bold text-white text-base mb-0.5">
+            {option.title}
+          </h4>
+          <p className="text-gray-400 text-xs md:text-sm">{option.info}</p>
+        </div>
+      </div>
+      <a
+        href={option.link}
+        target="_blank"
+        rel="noreferrer"
+        className="px-4 py-2 bg-gray-800 text-gray-200 rounded-lg text-xs font-semibold hover:bg-gray-700 hover:text-white transition-colors shrink-0"
+      >
+        {option.buttonText}
+      </a>
+    </div>
+  );
+};
+
+const Notification: React.FC<{ notification: NotificationState }> = ({
+  notification,
+}) => {
+  if (!notification.show) return null;
+
+  return (
+    <div
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl transition-all duration-300 ${
+        notification.type === "success"
+          ? "bg-emerald-950 border border-emerald-800 text-emerald-200"
+          : "bg-red-950 border border-red-800 text-red-200"
+      }`}
+    >
+      {notification.type === "success" ? (
+        <MdCheckCircle className="text-xl text-emerald-400" />
+      ) : (
+        <MdError className="text-xl text-red-400" />
+      )}
+      <p className="text-sm font-medium">{notification.message}</p>
+    </div>
+  );
+};
 
 const Contact: React.FC = () => {
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const form = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     message: "",
   });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [notification, setNotification] = useState<NotificationState>({
     show: false,
     type: "",
     message: "",
   });
-  const [errors, setErrors] = useState<FormErrors>({});
-
-  const form = useRef<HTMLFormElement>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -80,7 +131,7 @@ const Contact: React.FC = () => {
       { threshold: 0.1 }
     );
 
-    const section = document.getElementById("contact");
+    const section = document.querySelector("#contact");
     if (section) {
       observer.observe(section);
     }
@@ -92,108 +143,75 @@ const Contact: React.FC = () => {
     };
   }, []);
 
-  // Form validation
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ): void => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
-    }
-
+    if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Please enter a valid email";
     }
-
-    if (!formData.message.trim()) {
-      newErrors.message = "Message is required";
-    } else if (formData.message.trim().length < 10) {
-      newErrors.message = "Message must be at least 10 characters";
-    }
+    if (!formData.message.trim()) newErrors.message = "Message is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle input changes
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-  };
-
-  // Show notification
-  const showNotification = (type: "success" | "error", message: string): void => {
+  const showNotification = (
+    type: "success" | "error",
+    message: string
+  ): void => {
     setNotification({ show: true, type, message });
     setTimeout(() => {
       setNotification({ show: false, type: "", message: "" });
     }, 5000);
   };
 
-  // Send email
   const sendEmail = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-
     if (!validateForm()) return;
-
     setIsLoading(true);
 
     try {
-      // Fetch user's IP
-      const ipResponse = await fetch("https://api.ipify.org?format=json");
-      const ipData = await ipResponse.json();
-      const ip = ipData.ip;
-
-      // Post data to backend
-      const response = await fetch(
-        `${SERVER_API_URL}/contact`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            description: formData.message,
-            ip,
-          }),
-        }
-      );
-
-      const result = await response.json();
+      const response = await fetch(FORMSPREE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      });
 
       if (response.ok) {
         showNotification(
           "success",
-          "Message sent successfully! I'll get back to you soon."
+          "Message sent successfully! I will get back to you shortly."
         );
         setFormData({ name: "", email: "", message: "" });
       } else {
+        const result = await response.json();
         showNotification(
           "error",
-          result.message || "Failed to send message. Please try again."
+          result.error || "Failed to send message. Please try again."
         );
       }
     } catch (error) {
       console.error("Contact Form Error:", error);
-      showNotification(
-        "error",
-        "Something went wrong. Please try again later."
-      );
+      showNotification("error", "Something went wrong. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -205,319 +223,173 @@ const Contact: React.FC = () => {
       title: "Email",
       info: "aditya@iamadityaranjan.com",
       link: "mailto:aditya@iamadityaranjan.com",
-      buttonText: "Send Email",
-      color: "from-red-500 to-pink-500",
-      bgColor: "bg-red-50 dark:bg-red-900/20",
+      buttonText: "Write Email",
     },
     {
-      icon: BsWhatsapp,
+      icon: FaWhatsapp,
       title: "WhatsApp",
-      info: "+91 7481092465",
-      link: "https://api.whatsapp.com/send?phone=+917481092465",
-      buttonText: "Chat on WhatsApp",
-      color: "from-green-500 to-emerald-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      info: "+91 74841 84898",
+      link: "https://wa.me/917484184898",
+      buttonText: "Message",
     },
     {
-      icon: BsLinkedin,
+      icon: FaLinkedinIn,
       title: "LinkedIn",
-      info: "Connect with me",
-      link: "https://www.linkedin.com/in/aditya-ranjan-56331b1b7/",
-      buttonText: "View Profile",
-      color: "from-blue-500 to-indigo-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      info: "iamadityaranjan",
+      link: "https://www.linkedin.com/in/iamadityaranjan/",
+      buttonText: "Connect",
     },
   ];
-
-  const ContactOption: React.FC<ContactOptionProps> = ({ option, index }) => {
-    const Icon = option.icon;
-
-    return (
-      <div
-        className={`${
-          option.bgColor
-        } backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transform hover:scale-105 transition-all duration-500 ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-        }`}
-        style={{ animationDelay: `${index * 150}ms` }}
-      >
-        <div className="text-center">
-          <div
-            className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-linear-to-r ${option.color} flex items-center justify-center shadow-lg`}
-          >
-            <Icon className="text-white text-2xl" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-            {option.title}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4 font-medium">
-            {option.info}
-          </p>
-          <a
-            href={option.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-block px-6 py-3 bg-linear-to-r ${option.color} text-white rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm`}
-          >
-            {option.buttonText}
-          </a>
-        </div>
-      </div>
-    );
-  };
-
-  const Notification: React.FC<NotificationProps> = ({ notification }) => {
-    if (!notification.show) return null;
-
-    return (
-      <div
-        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 ${
-          notification.type === "success"
-            ? "bg-green-500 text-white"
-            : "bg-red-500 text-white"
-        }`}
-      >
-        {notification.type === "success" ? (
-          <FaCheckCircle className="text-xl" />
-        ) : (
-          <FaTimesCircle className="text-xl" />
-        )}
-        <span className="font-medium">{notification.message}</span>
-      </div>
-    );
-  };
 
   return (
     <>
       <Notification notification={notification} />
 
-      <section
-        id="contact"
-        className="py-12 md:py-20 bg-linear-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-indigo-900 relative overflow-hidden"
-      >
-        {/* Background decorations */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-linear-to-r from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-linear-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
+      <section id="contact" className="py-20 md:py-28 bg-gray-950 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           {/* Header */}
           <div
-            className={`text-center mb-12 md:mb-16 transition-all duration-1000 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
+            className={`text-center mb-16 transition-all duration-1000 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             }`}
           >
-            <h5 className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 font-light mb-2">
+            <p className="text-gray-500 text-sm font-medium uppercase tracking-widest mb-3">
               Get In Touch
-            </h5>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4 md:mb-6">
+            </p>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Contact Me
             </h2>
-            <div className="w-16 md:w-24 h-1 bg-linear-to-r from-indigo-600 to-purple-600 mx-auto rounded-full"></div>
-            <p className="text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
-              Have a project in mind? Let's discuss how we can work together to
-              bring your ideas to life.
+            <div className="w-16 h-0.5 bg-gray-700 mx-auto"></div>
+            <p className="text-gray-400 mt-4 max-w-xl mx-auto text-sm md:text-base">
+              Have a project in mind, a question, or an open role? Feel free to reach out directly.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-            {/* Contact Options */}
-            <div className="space-y-6">
-              <div
-                className={`transition-all duration-1000 delay-200 ${
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-10"
-                }`}
-              >
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">
-                  Let's Connect
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-                  I'm always open to discussing new opportunities, interesting
-                  projects, or just having a chat about technology. Choose your
-                  preferred way to get in touch!
-                </p>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-6xl mx-auto">
+            {/* Direct Contact Links */}
+            <div className="lg:col-span-5 space-y-4">
+              <h3 className="text-xl font-bold text-white mb-4">
+                Reach Me Directly
+              </h3>
+              {contactOptions.map((option, index) => (
+                <ContactOptionCard key={index} option={option} index={index} />
+              ))}
 
-              <div className="grid grid-cols-1 gap-6">
-                {contactOptions.map((option, index) => (
-                  <ContactOption key={index} option={option} index={index} />
-                ))}
-              </div>
-
-              {/* Additional Info */}
-              <div
-                className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 transition-all duration-1000 delay-500 ${
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-10"
-                }`}
-              >
-                <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">
-                  Quick Info
+              {/* Quick Info Box */}
+              <div className="bg-gray-900/80 rounded-2xl p-6 border border-gray-800 mt-6">
+                <h4 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
+                  Quick Details
                 </h4>
-                <div className="space-y-3">
+                <div className="space-y-3 text-sm text-gray-300">
                   <div className="flex items-center gap-3">
-                    <MdLocationOn className="text-indigo-500 text-xl" />
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Based in India
-                    </span>
+                    <MdLocationOn className="text-gray-400 text-lg" />
+                    <span>Based in India (IST / UTC+5:30)</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <MdPhone className="text-indigo-500 text-xl" />
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Available for remote work
-                    </span>
+                    <MdPhone className="text-gray-400 text-lg" />
+                    <span>Open for Remote & Contract Work</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <FaCommentDots className="text-indigo-500 text-xl" />
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Response within 24 hours
-                    </span>
+                    <FaCommentDots className="text-gray-400 text-lg" />
+                    <span>Average Response: Under 24 Hours</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Contact Form */}
-            <div
-              className={`transition-all duration-1000 delay-300 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-10"
-              }`}
-            >
-              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">
+            {/* Form */}
+            <div className="lg:col-span-7">
+              <div className="bg-gray-900/80 rounded-3xl p-8 border border-gray-800">
+                <h3 className="text-xl font-bold text-white mb-6">
                   Send a Message
                 </h3>
 
-                <form ref={form} onSubmit={sendEmail} className="space-y-6">
-                  {/* Name Field */}
-                  <div className="relative">
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
+                <form ref={form} onSubmit={sendEmail} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
                       Your Name
                     </label>
                     <div className="relative">
-                      <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
                       <input
                         type="text"
-                        id="name"
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder="Enter your full name"
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 ${
-                          errors.name
-                            ? "border-red-500"
-                            : "border-gray-200 dark:border-gray-600"
+                        placeholder="John Doe"
+                        className={`w-full pl-11 pr-4 py-3.5 bg-gray-950 border rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500 transition-colors ${
+                          errors.name ? "border-red-500" : "border-gray-800"
                         }`}
                       />
                     </div>
                     {errors.name && (
-                      <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
-                        <FaTimesCircle className="text-xs" />
-                        {errors.name}
+                      <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                        <FaTimesCircle /> {errors.name}
                       </p>
                     )}
                   </div>
 
-                  {/* Email Field */}
-                  <div className="relative">
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
                       Email Address
                     </label>
                     <div className="relative">
-                      <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
                       <input
                         type="email"
-                        id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="Enter your email address"
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 ${
-                          errors.email
-                            ? "border-red-500"
-                            : "border-gray-200 dark:border-gray-600"
+                        placeholder="john@example.com"
+                        className={`w-full pl-11 pr-4 py-3.5 bg-gray-950 border rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500 transition-colors ${
+                          errors.email ? "border-red-500" : "border-gray-800"
                         }`}
                       />
                     </div>
                     {errors.email && (
-                      <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
-                        <FaTimesCircle className="text-xs" />
-                        {errors.email}
+                      <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                        <FaTimesCircle /> {errors.email}
                       </p>
                     )}
                   </div>
 
-                  {/* Message Field */}
-                  <div className="relative">
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Your Message
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                      Message
                     </label>
                     <div className="relative">
-                      <FaCommentDots className="absolute left-4 top-6 text-gray-400" />
                       <textarea
-                        id="message"
                         name="message"
+                        rows={5}
                         value={formData.message}
                         onChange={handleChange}
-                        rows={6}
-                        placeholder="Tell me about your project or just say hello..."
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 resize-none ${
-                          errors.message
-                            ? "border-red-500"
-                            : "border-gray-200 dark:border-gray-600"
+                        placeholder="Tell me about your project or opportunity..."
+                        className={`w-full p-4 bg-gray-950 border rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500 transition-colors resize-none ${
+                          errors.message ? "border-red-500" : "border-gray-800"
                         }`}
-                      />
+                      ></textarea>
                     </div>
                     {errors.message && (
-                      <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
-                        <FaTimesCircle className="text-xs" />
-                        {errors.message}
+                      <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                        <FaTimesCircle /> {errors.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full flex items-center justify-center gap-3 px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                      isLoading ? "cursor-not-allowed" : ""
-                    }`}
+                    className="w-full py-4 bg-white text-gray-950 font-bold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                   >
                     {isLoading ? (
-                      <>
-                        <BiLoaderAlt className="animate-spin text-xl" />
-                        Sending...
-                      </>
+                      <span>Sending...</span>
                     ) : (
                       <>
-                        <FaPaperPlane className="text-lg" />
-                        Send Message
+                        <span>Send Message</span>
+                        <FaPaperPlane className="text-xs" />
                       </>
                     )}
                   </button>
-
-                  <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                    Your message will be sent directly to my email. I'll respond
-                    within 24 hours.
-                  </p>
                 </form>
               </div>
             </div>

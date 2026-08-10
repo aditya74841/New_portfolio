@@ -10,12 +10,14 @@ export default function JsonLd() {
     sameAs: [
       "https://github.com/aditya74841",
       "https://www.linkedin.com/in/iamadityaranjan/",
-      "https://x.com/adixranjan08"
+      "https://x.com/adixranjan08",
+      "https://leetcode.com/aditya7884"
     ],
     jobTitle: "Full Stack Developer",
     worksFor: {
       "@type": "Organization",
-      name: "CodenCreative"
+      name: "CodenCreative",
+      url: "https://codencreative.com"
     },
     alumniOf: {
       "@type": "CollegeOrUniversity",
@@ -24,13 +26,27 @@ export default function JsonLd() {
     knowsAbout: [
       "Full Stack Development",
       "React.js",
-      "Node.js",
       "Next.js",
-      "JavaScript",
+      "Node.js",
       "TypeScript",
-      "MongoDB"
+      "MongoDB",
+      "Express.js",
+      "Python",
+      "AI Integration",
+      "Gemini API",
+      "Docker",
+      "REST APIs"
     ],
-    description: "Full Stack Developer with expertise in React, Node.js, and modern web technologies."
+    hasOccupation: {
+      "@type": "Occupation",
+      name: "Full Stack Developer",
+      description: "Builds full-stack web applications using React, Next.js, Node.js, and MongoDB with AI integration capabilities."
+    },
+    description: "Full Stack Developer with 2+ years of experience in React, Next.js, Node.js, and AI integration. Building high-performance web applications and open source tools.",
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IN"
+    }
   };
 
   return (

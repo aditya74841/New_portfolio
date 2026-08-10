@@ -1,13 +1,11 @@
 "use client"
 
 import React, { useEffect, useState } from "react";
-import { FaGithub, FaLinkedin, FaHeart, FaCode, FaServer } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaHeart, FaCode } from "react-icons/fa";
 import { FiInstagram, FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 import { BsTwitter } from "react-icons/bs";
 import { MdRocketLaunch } from "react-icons/md";
 import { IconType } from "react-icons";
-import useHealthCheck from "../../../hooks/useHealthCheck";
-import { SERVER_URL } from "../../../app/constant";
 
 // Type definitions
 interface NavigationLink {
@@ -31,10 +29,6 @@ interface QuickInfoItem {
 const Footer: React.FC = () => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [currentYear] = useState<number>(new Date().getFullYear());
-
-  const { 
-    serverMessage, 
-  } = useHealthCheck(`${SERVER_URL}/health-check`);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -64,7 +58,6 @@ const Footer: React.FC = () => {
     { href: "#experience", label: "Experience" },
     { href: "#services", label: "Skills" },
     { href: "#portfolio", label: "Portfolio" },
-    { href: "#testimonials", label: "Testimonials" },
     { href: "#contact", label: "Contact" }
   ];
 
@@ -114,11 +107,11 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="relative bg-linear-to-br from-gray-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
-      {/* Background decorations */}
+    <footer className="relative bg-linear-to-br from-gray-900 via-gray-900 to-gray-950 text-white overflow-hidden">
+      {/* Subtle background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-linear-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-linear-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-linear-to-r from-gray-700/10 to-gray-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-linear-to-r from-gray-600/10 to-gray-700/10 rounded-full blur-3xl"></div>
       </div>
 
       {/* Main Footer Content */}
@@ -132,11 +125,11 @@ const Footer: React.FC = () => {
             <div className="lg:col-span-2">
               <a 
                 href="#home" 
-                className="inline-block text-3xl md:text-4xl font-bold bg-linear-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-purple-400 hover:to-pink-400 transition-all duration-300 mb-4"
+                className="inline-block text-3xl md:text-4xl font-bold text-white hover:text-gray-300 transition-all duration-300 mb-4"
               >
                 Aditya Ranjan
               </a>
-              <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md">
+              <p className="text-gray-400 text-lg leading-relaxed mb-6 max-w-md">
                 Full Stack Developer passionate about creating innovative web solutions 
                 and building exceptional user experiences.
               </p>
@@ -149,7 +142,7 @@ const Footer: React.FC = () => {
                     <a
                       key={index}
                       href={item.href}
-                      className="flex items-center gap-3 text-gray-300 hover:text-indigo-400 transition-colors duration-300 group"
+                      className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors duration-300 group"
                     >
                       <Icon className="text-lg group-hover:scale-110 transition-transform duration-300" />
                       <span className="text-sm">{item.text}</span>
@@ -167,9 +160,9 @@ const Footer: React.FC = () => {
                   <li key={index}>
                     <a
                       href={link.href}
-                      className="text-gray-300 hover:text-indigo-400 transition-colors duration-300 flex items-center gap-2 group"
+                      className="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 group"
                     >
-                      <span className="w-2 h-2 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                      <span className="w-2 h-2 bg-gray-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                       {link.label}
                     </a>
                   </li>
@@ -201,7 +194,7 @@ const Footer: React.FC = () => {
               {/* CTA Button */}
               <a
                 href="#contact"
-                className="inline-flex items-center gap-2 bg-linear-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
                 <MdRocketLaunch className="text-lg" />
                 <span>Start a Project</span>
@@ -210,53 +203,27 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/20 my-8"></div>
+          <div className="border-t border-white/10 my-8"></div>
 
           {/* Bottom Section */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             
             {/* Copyright */}
             <div className="text-center md:text-left">
-              <p className="text-gray-300 flex items-center gap-2 justify-center md:justify-start">
-                <span>&copy; {currentYear} Aditya Ranjan. Made with</span>
+              <p className="text-gray-400 flex items-center gap-2 justify-center md:justify-start">
+                <span suppressHydrationWarning>&copy; {currentYear} Aditya Ranjan. Made with</span>
                 <FaHeart className="text-red-500 animate-pulse" />
                 <span>in India</span>
               </p>
-              <p className="text-gray-400 text-sm mt-1">
-                All rights reserved. Built with React & Tailwind CSS
+              <p className="text-gray-500 text-sm mt-1">
+                All rights reserved. Built with Next.js & Tailwind CSS
               </p>
             </div>
 
-            {/* Server Status */}
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-              <div className="flex items-center gap-2">
-                <FaServer className="text-indigo-400" />
-                <span className="text-sm text-gray-300">Server Status:</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    serverMessage && serverMessage !== "Server offline" 
-                      ? "bg-green-400" 
-                      : "bg-red-400"
-                  } animate-pulse`}
-                ></span>
-                <span className={`text-sm font-medium ${
-                  serverMessage && serverMessage !== "Server offline"
-                    ? "text-green-400"
-                    : "text-red-400"
-                }`}>
-                  {serverMessage || "Checking..."}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tech Stack Badge */}
-          <div className="mt-8 text-center">
+            {/* Tech Stack Badge */}
             <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 text-sm text-gray-400">
-              <FaCode className="text-indigo-400" />
-              <span>Built with React, Tailwind CSS, EmailJS & lots of ☕</span>
+              <FaCode className="text-gray-500" />
+              <span>Built with Next.js, TypeScript & ❤️</span>
             </div>
           </div>
         </div>

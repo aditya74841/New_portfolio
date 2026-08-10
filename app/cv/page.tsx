@@ -1,495 +1,347 @@
-"use client"
+"use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   FaEnvelope,
   FaPhoneAlt,
   FaGithub,
   FaLinkedin,
   FaGlobe,
-  FaUser,
-  FaClipboard,
+  FaDownload,
+  FaPrint,
+  FaArrowLeft,
   FaExternalLinkAlt,
-  FaCode,
-  FaTools,
+  FaCopy,
 } from "react-icons/fa";
-import { IconType } from "react-icons";
 import { toast } from "react-hot-toast";
 
-// Type definitions
-interface ContactItemProps {
-  icon: React.ReactNode;
-  text: string;
-  href?: string;
-  download?: boolean;
-}
+const CVPage: React.FC = () => {
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard
+        .writeText(window.location.href)
+        .then(() => toast.success("CV link copied to clipboard!"))
+        .catch(() => toast.error("Failed to copy link."));
+    }
+  };
 
-interface ResumeSectionProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
+  const handlePrint = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
+  };
 
-interface ExperienceItemProps {
-  company: string;
-  role: string;
-  duration: string;
-  location: string;
-  points: string[];
-}
-
-interface ProjectLink {
-  text: string;
-  url: string;
-  type: string;
-}
-
-interface ProjectCardProps {
-  title: string;
-  description: string;
-  highlights: string[];
-  technologies: string[];
-  links: ProjectLink[];
-}
-
-interface SkillCategoryProps {
-  title: string;
-  items: string[];
-}
-
-interface EducationItemProps {
-  degree: string;
-  field: string;
-  institution: string;
-  duration: string;
-  cgpa?: string;
-  percentage?: string;
-  subjects?: string[];
-}
-
-const Resume: React.FC = () => {
   return (
-    <div className="bg-linear-to-br from-slate-50 to-blue-50 text-gray-800 font-inter py-10 px-4 min-h-screen">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <aside className="lg:col-span-1 bg-white shadow-2xl rounded-3xl p-8 border border-slate-200 lg:sticky lg:top-6 h-fit">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-              <img src="/letter-a.png" alt="A" className="w-full h-full object-cover" />
-            </div>
-            <h1 className="text-3xl font-bold mb-2 text-gray-900">
-              Aditya Ranjan
-            </h1>
-            <p className="text-indigo-600 font-medium text-lg">
-              Full Stack  Developer
-            </p>
-            <p className="text-sm text-gray-500 mt-1">2+ Years Experience</p>
-          </div>
+    <div className="min-h-screen bg-gray-950 text-gray-100 py-6 sm:py-12 md:py-16 px-3 sm:px-6 lg:px-8 print:p-0 print:bg-white print:min-h-0 print:text-black overflow-x-hidden">
+      {/* Global Print Style overrides */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 12mm 10mm;
+          }
+          body, html {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          .print-container {
+            background: #ffffff !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
 
-          <div className="space-y-4 text-sm">
-            <ContactItem icon={<FaPhoneAlt />} text="+91 74810 92465" />
-            <ContactItem
-              icon={<FaEnvelope />}
-              text="aditya@iamadityaranjan.com"
-              href="mailto:aditya@iamadityaranjan.com"
-            />
-            <ContactItem
-              icon={<FaLinkedin />}
-              text="LinkedIn Profile"
-              href="https://www.linkedin.com/in/iamadityaranjan/"
-            />
-            <ContactItem
-              icon={<FaGithub />}
-              text="GitHub Profile"
-              href="https://github.com/aditya74841"
-            />
-            <ContactItem
-              icon={<FaGlobe />}
-              text="Portfolio Website"
-              href="/"
-            />
+      {/* Top Action Bar (Hidden on Print) */}
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-mono text-gray-400 hover:text-white transition-colors"
+        >
+          <FaArrowLeft />
+          <span>Back to Portfolio</span>
+        </Link>
 
-            <div className="pt-4 border-t border-gray-200">
-              <ContactItem
-                icon={<FaUser />}
-                text="Download Resume"
-                href="/aditya_resume.pdf"
-                download
-              />
-              <div
-                className="flex items-center cursor-pointer text-indigo-600 hover:text-indigo-700 transition-colors mt-3 p-2 rounded-lg hover:bg-indigo-50"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href)
-                    .then(() => {
-                      toast.success("CV link copied to clipboard!");
-                    })
-                    .catch(() => {
-                      toast.error("Failed to copy link. Please try again.");
-                    });
-                }}
-              >
-                <FaClipboard className="mr-3" /> Copy CV Link
-              </div>
-            </div>
-          </div>
-        </aside>
+        <div className="flex items-center justify-end gap-2 flex-wrap sm:flex-nowrap">
+          <button
+            onClick={handleCopyLink}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-[11px] sm:text-xs text-gray-300 hover:text-white hover:border-gray-700 transition-colors"
+          >
+            <FaCopy className="text-xs" />
+            <span>Copy Link</span>
+          </button>
 
-        <main className="lg:col-span-3 space-y-10">
-          <ResumeSection title="Professional Summary" icon={<FaUser />}>
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-              <p className="text-gray-700 leading-relaxed">
-                I am a Full Stack Developer with more than two years of
-                experience in building web applications and improving system
-                performance. Skilled in building scalable, high-performance
-                applications that improve reliability, user experience, and
-                business outcomes. I have strong skills in modern JavaScript
-                frameworks, databases, and agile methods. I also use
-                artificial intelligence in my daily work to make tasks easier
-                and more efficient.
+          <button
+            onClick={handlePrint}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-[11px] sm:text-xs text-gray-300 hover:text-white hover:border-gray-700 transition-colors"
+          >
+            <FaPrint className="text-xs" />
+            <span>Print</span>
+          </button>
+
+          <a
+            href="/aditya_resume.pdf"
+            download
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-gray-950 font-bold rounded-lg text-[11px] sm:text-xs hover:bg-gray-200 transition-colors shadow-sm"
+          >
+            <FaDownload className="text-xs" />
+            <span>Download PDF</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Main CV Container Sheet */}
+      <main className="print-container max-w-4xl mx-auto bg-gray-900/90 border border-gray-800/90 rounded-xl sm:rounded-2xl p-4 sm:p-8 md:p-10 shadow-2xl space-y-6 font-sans print:bg-white print:text-black print:border-none print:shadow-none print:p-0 print:space-y-4">
+        {/* CV Header */}
+        <header className="border-b border-gray-800 pb-5 print:border-gray-300 print:pb-3">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight print:text-black print:text-2xl">
+                Aditya Ranjan
+              </h1>
+              <p className="text-xs sm:text-sm font-mono text-emerald-400 mt-1 print:text-emerald-700 print:text-xs">
+                Full Stack Developer • 2+ Years Experience
               </p>
             </div>
-          </ResumeSection>
 
-          <ResumeSection title="Professional Experience" icon={<FaCode />}>
-            <div className="space-y-6">
-              <ExperienceItem
-                company="CodenCreative"
-                role="Full Stack Developer"
-                duration="Feb 2024 – Present"
-                location="On-Site"
-                points={[
-                  "Optimized e-commerce platform performance, achieving 30% faster load times and 20% higher user engagement through code optimization and caching strategies",
-                  "Led frontend development for research applications, improving data visualization efficiency by 25%",
-                  "Leveraged AI tools (ChatGPT, Claude, Cursor, etc.) for coding assistance, debugging, and automating repetitive tasks, improving overall productivity and code quality"
-                ]}
-              />
-              <ExperienceItem
-                company="BlackWater Coffee Pvt Ltd."
-                role="Full Stack Developer"
-                duration="Dec 2022 – Jan 2024"
-                location="On-Site"
-                points={[
-                  "Designed and deployed a POS system handling 500+ daily transactions, reducing average checkout time by 40% (3.5 → 2.1 minutes)",
-                  "Developed an inventory management module, decreasing stock discrepancies by 30% and improving accuracy from 75% to 95%",
-                  "Integrated Kitchen Display System accelerating order fulfillment by 25%"
-                ]}
-              />
+            {/* Quick Contact Badge Grid / Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap gap-2 sm:gap-x-4 sm:gap-y-2 text-xs font-mono text-gray-400 print:text-gray-700 print:gap-x-3 print:text-[11px]">
+              <a
+                href="tel:+917481092465"
+                className="flex items-center gap-1.5 hover:text-white transition-colors break-all"
+              >
+                <FaPhoneAlt className="text-gray-500 shrink-0 print:text-gray-700" />
+                <span>+91 74810 92465</span>
+              </a>
+              <a
+                href="mailto:aditya@iamadityaranjan.com"
+                className="flex items-center gap-1.5 hover:text-white transition-colors break-all"
+              >
+                <FaEnvelope className="text-gray-500 shrink-0 print:text-gray-700" />
+                <span>aditya@iamadityaranjan.com</span>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/iamadityaranjan/"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
+              >
+                <FaLinkedin className="text-gray-500 shrink-0 print:text-gray-700" />
+                <span>LinkedIn</span>
+              </a>
+              <a
+                href="https://github.com/aditya74841"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
+              >
+                <FaGithub className="text-gray-500 shrink-0 print:text-gray-700" />
+                <span>GitHub</span>
+              </a>
+              <a
+                href="https://iamadityaranjan.com"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
+              >
+                <FaGlobe className="text-gray-500 shrink-0 print:text-gray-700" />
+                <span>Portfolio</span>
+              </a>
             </div>
-          </ResumeSection>
+          </div>
+        </header>
 
-          <ResumeSection title="Key Projects" icon={<FaTools />}>
-            <div className="grid gap-6">
-              <ProjectCard
-                title="Audit Management System"
-                description="Built an end-to-end audit management system for companies to audit multiple store locations with standardized question sets and structured response collection."
-                highlights={[
-                  "Multimedia support (photo, video, file, text)",
-                  "Standardized question sets",
-                  "Structured response collection",
-                  "Multi-location audit management"
-                ]}
-                technologies={[
-                  "Node.js",
-                  "Express.js",
-                  "MongoDB",
-                  "JWT",
-                  "Socket.io",
-                  "Next.js",
-                  "ShadCN UI",
-                  "Tailwind CSS",
-                  "Cloudinary"
-                ]}
-                links={[
-                  {
-                    text: "Live Demo",
-                    url: "https://audit.iamadityaranjan.com",
-                    type: "demo",
-                  }
-                ]}
-              />
+        {/* 1. Professional Summary */}
+        <section className="space-y-1.5">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-gray-400 print:text-gray-800 font-bold">
+            Professional Summary
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-300 leading-relaxed print:text-gray-800 print:text-xs">
+            Full Stack Developer with over 2 years of experience building high-performance web applications and scalable backends. Skilled in React, Next.js, Node.js, Express, and MongoDB with a focus on UI responsiveness, workflow automation, and AI API integration. Strong track record of accelerating load times and optimizing order fulfillment systems.
+          </p>
+        </section>
 
-              <ProjectCard
-                title="MetaForge Pro - Meta Tag Generator Suite"
-                description="Developed a full-stack meta tag generator platform with 17+ specialized generators for optimizing content across social media platforms and search engines."
-                highlights={[
-                  "17+ specialized generators",
-                  "Real-time validation",
-                  "Live preview functionality",
-                  "Enterprise-grade Open Graph & Twitter Cards"
-                ]}
-                technologies={[
-                  "JavaScript",
-                  "Next.js",
-                  "HTML5",
-                  "CSS3",
-                  "Responsive Design"
-                ]}
-                links={[
-                  {
-                    text: "Live Demo",
-                    url: "https://metaforge.allaboutcse.com",
-                    type: "demo",
-                  }
-                ]}
-              />
+        {/* 2. Professional Experience */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-gray-400 print:text-gray-800 border-b border-gray-800/80 pb-1 print:border-gray-300 font-bold">
+            Professional Experience
+          </h2>
 
-              <ProjectCard
-                title="View More Projects"
-                description="Explore additional projects showcasing technical capabilities and innovative solutions."
-                highlights={[
-                  "Full project portfolio",
-                  "Live demonstrations",
-                  "Source code access",
-                  "Technical documentation"
-                ]}
-                technologies={[
-                  "Various Technologies"
-                ]}
-                links={[
-                  {
-                    text: "Portfolio",
-                    url: "https://iamadityaranjan.com/projects",
-                    type: "demo",
-                  }
-                ]}
-              />
+          {/* Job 1 */}
+          <div className="space-y-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div>
+                <h3 className="text-xs sm:text-sm md:text-base font-bold text-white print:text-black">
+                  Full Stack Developer • <span className="text-emerald-400 font-medium print:text-emerald-700">CodenCreative</span>
+                </h3>
+              </div>
+              <span className="text-[11px] sm:text-xs font-mono text-gray-400 print:text-gray-600">
+                Feb 2024 – Present | On-Site
+              </span>
             </div>
-          </ResumeSection>
+            <ul className="list-disc list-inside space-y-1 text-xs text-gray-300 print:text-gray-800 leading-relaxed">
+              <li>
+                Optimized e-commerce platform performance, achieving <strong className="text-white print:text-black">30% faster load times</strong> and 20% higher user engagement through code splitting and caching strategies.
+              </li>
+              <li>
+                Led frontend development for research applications, improving data visualization efficiency by 25%.
+              </li>
+              <li>
+                Leveraged AI tools (ChatGPT, Claude, Cursor) for automated code review, debugging, and task automation.
+              </li>
+            </ul>
+          </div>
 
-          <ResumeSection title="Technical Skills" icon={<FaTools />}>
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <SkillCategory
-                  title="Frontend"
-                  items={[
-                    "JavaScript (ES6+)",
-                    "React.js",
-                    "Next.js",
-                    "TypeScript",
-                    "Redux",
-                    "TailwindCSS"
-                  ]}
-                />
-                <SkillCategory
-                  title="Backend"
-                  items={[
-                    "Node.js",
-                    "Express.js",
-                    "RESTful APIs",
-                    "JWT Authentication"
-                  ]}
-                />
-                <SkillCategory
-                  title="Database"
-                  items={[
-                    "MongoDB"
-                  ]}
-                />
-                <SkillCategory
-                  title="Development Tools"
-                  items={[
-                    "Git/GitHub",
-                    "Postman",
-                    "Socket.io",
-                    "Cloudinary",
-                    "Vite"
-                  ]}
-                />
-                <SkillCategory
-                  title="Methodologies"
-                  items={[
-                    "Agile Development",
-                    "Test-Driven Development",
-                    "Responsive Design"
-                  ]}
-                />
-                <SkillCategory
-                  title="AI Tools & Technologies"
-                  items={[
-                    "ChatGPT",
-                    "Claude",
-                    "Perplexity",
-                    "Quodogen",
-                    "Cursor",
-                    "Prompt Engineering"
-                  ]}
-                />
+          {/* Job 2 */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div>
+                <h3 className="text-xs sm:text-sm md:text-base font-bold text-white print:text-black">
+                  Full Stack Developer • <span className="text-emerald-400 font-medium print:text-emerald-700">BlackWater Coffee Pvt Ltd.</span>
+                </h3>
+              </div>
+              <span className="text-[11px] sm:text-xs font-mono text-gray-400 print:text-gray-600">
+                Dec 2022 – Jan 2024 | On-Site
+              </span>
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-xs text-gray-300 print:text-gray-800 leading-relaxed">
+              <li>
+                Designed and deployed a custom POS system handling <strong className="text-white print:text-black">500+ daily transactions</strong>, reducing checkout time by 40% (3.5 min → 2.1 min).
+              </li>
+              <li>
+                Developed an inventory management module decreasing stock discrepancies by 30% and improving accuracy from 75% to 95%.
+              </li>
+              <li>
+                Integrated Kitchen Display System accelerating order fulfillment throughput by 25%.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* 3. Featured Projects */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-gray-400 print:text-gray-800 border-b border-gray-800/80 pb-1 print:border-gray-300 font-bold">
+            Key Projects
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Project 1 */}
+            <div className="bg-gray-950/60 border border-gray-800/80 p-3 sm:p-3.5 rounded-xl space-y-1.5 print:bg-white print:border-gray-200 print:p-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs sm:text-sm font-bold text-white print:text-black">
+                  Audit Management System
+                </h3>
+                <a
+                  href="https://audit.iamadityaranjan.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-gray-400 hover:text-white flex items-center gap-1 print:text-gray-700"
+                >
+                  <span>Live</span> <FaExternalLinkAlt className="text-[9px]" />
+                </a>
+              </div>
+              <p className="text-xs text-gray-400 print:text-gray-700 leading-relaxed">
+                Multi-location enterprise store audit system with standardized question sets, response collection, and media upload support.
+              </p>
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {["Node.js", "Express", "MongoDB", "Next.js", "Cloudinary"].map((tech) => (
+                  <span key={tech} className="px-1.5 py-0.5 bg-gray-900 border border-gray-800 text-[10px] font-mono text-gray-300 rounded print:bg-gray-100 print:text-black print:border-gray-300">
+                    {tech}
+                  </span>
+                ))}
               </div>
             </div>
-          </ResumeSection>
 
-          <ResumeSection title="Education" icon={<FaUser />}>
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-              <div className="space-y-6">
-                <EducationItem
-                  degree="Bachelor of Technology"
-                  field="Computer Science"
-                  institution="Amritsar College of Engineering & Technology"
-                  duration="2019 – 2023"
-                  cgpa="7.4"
-                />
+            {/* Project 2 */}
+            <div className="bg-gray-950/60 border border-gray-800/80 p-3 sm:p-3.5 rounded-xl space-y-1.5 print:bg-white print:border-gray-200 print:p-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs sm:text-sm font-bold text-white print:text-black">
+                  MetaForge Pro Suite
+                </h3>
+                <a
+                  href="https://metaforge.allaboutcse.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-gray-400 hover:text-white flex items-center gap-1 print:text-gray-700"
+                >
+                  <span>Live</span> <FaExternalLinkAlt className="text-[9px]" />
+                </a>
+              </div>
+              <p className="text-xs text-gray-400 print:text-gray-700 leading-relaxed">
+                SEO optimization platform with 17+ generators, real-time tag validation, and OpenGraph / Twitter Card preview engines.
+              </p>
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {["Next.js", "TypeScript", "Tailwind CSS", "SEO APIs"].map((tech) => (
+                  <span key={tech} className="px-1.5 py-0.5 bg-gray-900 border border-gray-800 text-[10px] font-mono text-gray-300 rounded print:bg-gray-100 print:text-black print:border-gray-300">
+                    {tech}
+                  </span>
+                ))}
               </div>
             </div>
-          </ResumeSection>
-        </main>
-      </div>
+          </div>
+        </section>
+
+        {/* 4. Technical Skills */}
+        <section className="space-y-2">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-gray-400 print:text-gray-800 border-b border-gray-800/80 pb-1 print:border-gray-300 font-bold">
+            Technical Skills
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div>
+              <span className="font-mono text-gray-400 block mb-0.5 print:text-gray-800">Frontend</span>
+              <p className="text-gray-300 print:text-gray-900 font-medium">
+                React, Next.js, TypeScript, JavaScript (ES6+), Tailwind CSS, Redux
+              </p>
+            </div>
+            <div>
+              <span className="font-mono text-gray-400 block mb-0.5 print:text-gray-800">Backend & DB</span>
+              <p className="text-gray-300 print:text-gray-900 font-medium">
+                Node.js, Express.js, REST APIs, JWT Auth, MongoDB, PostgreSQL
+              </p>
+            </div>
+            <div>
+              <span className="font-mono text-gray-400 block mb-0.5 print:text-gray-800">Tools & AI</span>
+              <p className="text-gray-300 print:text-gray-900 font-medium">
+                Git, Docker, Vercel, AWS, Postman, ChatGPT, Claude, Prompt Eng.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. Education */}
+        <section className="space-y-1.5 pt-1 border-t border-gray-800/80 print:border-gray-300">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-gray-400 print:text-gray-800 font-bold">
+            Education
+          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1">
+            <div>
+              <h3 className="font-bold text-white print:text-black">
+                Bachelor of Technology (B.Tech) in Computer Science & Engineering
+              </h3>
+              <p className="text-gray-400 print:text-gray-700">
+                Amritsar College of Engineering & Technology
+              </p>
+            </div>
+            <div className="text-left sm:text-right font-mono text-gray-400 print:text-gray-700">
+              <p>2019 – 2023</p>
+              <p className="text-emerald-400 print:text-emerald-700">CGPA: 7.4</p>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
 
-const ContactItem: React.FC<ContactItemProps> = ({ icon, text, href, download = false }) => (
-  <div className="flex items-center p-2 rounded-lg hover:bg-slate-50 transition-colors">
-    <span className="mr-3 text-indigo-500 text-lg">{icon}</span>
-    {href ? (
-      <a
-        href={href}
-        download={download}
-        target="_blank"
-        rel="noreferrer"
-        className="text-gray-700 hover:text-indigo-600 transition-colors text-sm font-medium"
-      >
-        {text}
-      </a>
-    ) : (
-      <span className="text-gray-700 text-sm">{text}</span>
-    )}
-  </div>
-);
-
-const ResumeSection: React.FC<ResumeSectionProps> = ({ title, icon, children }) => (
-  <section>
-    <div className="flex items-center mb-6">
-      <span className="text-indigo-500 text-xl mr-3">{icon}</span>
-      <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-    </div>
-    {children}
-  </section>
-);
-
-const ExperienceItem: React.FC<ExperienceItemProps> = ({ company, role, duration, location, points }) => (
-  <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-shadow">
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-      <div>
-        <h3 className="text-xl font-bold text-gray-900">{company}</h3>
-        <p className="text-indigo-600 font-medium">{role}</p>
-      </div>
-      <div className="text-right text-sm text-gray-500">
-        <p>{duration}</p>
-        <p>{location}</p>
-      </div>
-    </div>
-    <ul className="space-y-2">
-      {points.map((point, idx) => (
-        <li key={idx} className="flex items-start">
-          <span className="w-2 h-2 bg-indigo-500 rounded-full mt-2 mr-3 shrink-0"></span>
-          <span className="text-gray-700 text-sm leading-relaxed">{point}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
-const ProjectCard: React.FC<ProjectCardProps> = ({
-  title,
-  description,
-  highlights,
-  technologies,
-  links,
-}) => (
-  <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-shadow">
-    <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
-    <p className="text-gray-700 mb-4 leading-relaxed">{description}</p>
-
-    <div className="mb-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-2">
-        Key Features:
-      </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-        {highlights.map((highlight, idx) => (
-          <div key={idx} className="flex items-center text-sm text-gray-600">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
-            {highlight}
-          </div>
-        ))}
-      </div>
-    </div>
-
-    <div className="mb-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-2">
-        Technologies:
-      </h4>
-      <div className="flex flex-wrap gap-2">
-        {technologies.map((tech, idx) => (
-          <span
-            key={idx}
-            className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium"
-          >
-            {tech}
-          </span>
-        ))}
-      </div>
-    </div>
-
-    <div className="flex flex-wrap gap-3 pt-2">
-      {links.map((link, idx) => (
-        <a
-          key={idx}
-          href={link.url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-        >
-          {link.text}
-          <FaExternalLinkAlt className="ml-1 text-xs" />
-        </a>
-      ))}
-    </div>
-  </div>
-);
-
-const SkillCategory: React.FC<SkillCategoryProps> = ({ title, items }) => (
-  <div>
-    <h4 className="font-semibold text-gray-900 mb-3">{title}</h4>
-    <div className="space-y-2">
-      {items.map((item, idx) => (
-        <div key={idx} className="flex items-center">
-          <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
-          <span className="text-sm text-gray-700">{item}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const EducationItem: React.FC<EducationItemProps> = ({
-  degree,
-  field,
-  institution,
-  duration,
-  cgpa,
-  percentage,
-  subjects,
-}) => (
-  <div>
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-      <div>
-        <h4 className="font-bold text-gray-900">{degree}</h4>
-        <p className="text-indigo-600 font-medium">{field}</p>
-        <p className="text-gray-600 text-sm">{institution}</p>
-      </div>
-      <div className="text-right text-sm text-gray-500">
-        <p>{duration}</p>
-        {cgpa && <p>CGPA: {cgpa}</p>}
-        {percentage && <p>{percentage}</p>}
-      </div>
-    </div>
-    {subjects && (
-      <div className="mt-2">
-        <p className="text-sm text-gray-600">
-          <strong>Key Subjects:</strong> {subjects.join(", ")}
-        </p>
-      </div>
-    )}
-  </div>
-);
-
-export default Resume;
+export default CVPage;

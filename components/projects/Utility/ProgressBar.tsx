@@ -1,43 +1,26 @@
+"use client";
 
-import React from 'react';
-import { TrendingUp } from 'lucide-react';
+import React from "react";
+import { TrendingUp } from "lucide-react";
 
-export const ProgressBar: React.FC<{ progress?: number }> = ({ progress = 0 }) => {
+export const ProgressBar: React.FC<{ progress?: number }> = ({
+  progress = 0,
+}) => {
   return (
-    <div className="mb-6">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-          <TrendingUp className="w-4 h-4" />
+    <div>
+      <div className="flex justify-between items-center mb-1.5 text-xs font-mono">
+        <span className="text-gray-400 flex items-center gap-1">
+          <TrendingUp className="w-3.5 h-3.5 text-gray-500" />
           Progress
         </span>
-        <span className="text-sm font-bold text-gray-800">{progress}%</span>
+        <span className="text-white font-bold">{progress}%</span>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+      <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-700/50">
         <div
-          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2.5 rounded-full transition-all duration-1000 ease-out"
+          className="bg-white h-2 rounded-full transition-all duration-1000 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
     </div>
   );
 };
-
-// import React from 'react';
-// import { TrendingUp } from 'lucide-react';
-
-// export const ProgressBar: React.FC<{ progress?: number }> = ({ progress = 0 }) => {
-//   return (
-//     <div className="mb-6">
-//       <div className="flex justify-between items-center mb-2">
-//         <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-//           <TrendingUp className="w-4 h-4" />
-//           Progress
-//         </span>
-//         <span className="text-sm font-bold text-gray-800">{progress}%</span>
-//       </div>
-//       <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-//         <div className="bg-linear-to-r from-blue-500 to-purple-500 h-2.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
-//       </div>
-//     </div>
-//   );
-// };

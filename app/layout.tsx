@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
-import Providers from "./Providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -84,13 +83,15 @@ export const metadata: Metadata = {
   },
 };
 
+import Navbar from "@/components/Navbar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo.png" type="image/png" />
         <link rel="shortcut icon" href="/logo.png" type="image/png" />
@@ -98,11 +99,11 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <Providers>
-          <Toaster position="bottom-right" />
-          {children}
-        </Providers>
+        <Navbar />
+        <Toaster position="bottom-right" />
+        {children}
       </body>
     </html>
   );

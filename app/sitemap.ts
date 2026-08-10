@@ -9,10 +9,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: 'https://iamadityaranjan.com/cv',
+      url: 'https://iamadityaranjan.com/projects',
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.8,
-    }
+      priority: 0.9,
+    },
+    {
+      url: 'https://iamadityaranjan.com/cv',
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.7,
+    },
   ]
 }
