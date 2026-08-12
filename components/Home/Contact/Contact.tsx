@@ -228,8 +228,8 @@ const Contact: React.FC = () => {
     {
       icon: FaWhatsapp,
       title: "WhatsApp",
-      info: "+91 74841 84898",
-      link: "https://wa.me/917484184898",
+      info: "+91 7481092465",
+      link: "https://wa.me/917481092465",
       buttonText: "Message",
     },
     {
