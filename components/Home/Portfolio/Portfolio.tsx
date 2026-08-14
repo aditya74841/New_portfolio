@@ -8,6 +8,7 @@ import IMG2 from "../../../assets/portfolio2.jpg";
 import IMG3 from "../../../assets/portfolio3.jpg";
 import IMG8 from "../../../assets/auditImage.png";
 import IMG12 from "../../../assets/ai_browsing.png";
+import IMG13 from "../../../assets/clear_learn.png";
 
 interface Project {
   id: number;
@@ -34,7 +35,7 @@ const ProjectCard: React.FC<{ project: Project; index: number }> = ({
           setIsVisible(true);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     const card = document.getElementById(`home-project-${project.id}`);
@@ -133,7 +134,7 @@ const Portfolio: React.FC = () => {
           setIsVisible(true);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     const section = document.querySelector("#portfolio");
@@ -157,21 +158,46 @@ const Portfolio: React.FC = () => {
         "AI-powered SEO intelligence platform that crawls websites, analyzes page structure, and generates optimized meta titles, descriptions, Open Graph tags, Twitter Cards, and Schema.org structured data.",
       githubLink: "https://github.com/aditya74841/Meta_tag_generator",
       liveDemoLink: "https://metaforge.allaboutcse.com/",
-      technologies: ["React", "Next.js", "TailwindCSS", "Shadcn", "Node.js", "Express", "Groq", "Cheerio", "SEO Audit"],
+      technologies: [
+        "React",
+        "Next.js",
+        "TailwindCSS",
+        "Shadcn",
+        "Node.js",
+        "Express",
+        "Groq",
+        "Cheerio",
+        "SEO Audit",
+      ],
       featured: true,
       category: "AI",
     },
     {
       id: 2,
-      imgSrc: IMG8.src,
-      title: "Enterprise Audit Management System",
+      imgSrc: IMG13.src,
+      title: "Clear Learn - AI Workspace",
       description:
-        "End-to-end audit platform enabling standardized audits across locations with multimedia evidence support. Handles 200+ concurrent auditors with real-time sync.",
-      githubLink: "https://github.com/aditya74841/Url_Shortner",
-      liveDemoLink: "https://audit.iamadityaranjan.com/",
-      technologies: ["React", "Next.js", "Node.js", "MongoDB", "Express", "Cloudinary"],
+        "An AI-powered learning workspace featuring context-aware subchat branching, real-time SSE streaming, Tavily web search, and an integrated rich-text notes system with vector semantic search.",
+      githubLink: "https://github.com/aditya74841/Clear_Learn",
+      liveDemoLink: "https://clearlearn.iamadityaranjan.com/",
+      technologies: [
+        "Next.js",
+        "React",
+        "JavaScript",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "Mongoose",
+        "Zustand",
+        "OpenRouter API",
+        "Tavily Search API",
+        "Quill Editor",
+        "Server-Sent Events (SSE)",
+        "Vector Embeddings",
+        "JWT / Passport.js",
+      ],
       featured: true,
-      category: "Full Stack",
+      category: "AI Full Stack",
     },
     {
       id: 3,
@@ -181,22 +207,29 @@ const Portfolio: React.FC = () => {
         "AI-powered platform that transcribes and summarizes video content in seconds using Gemini API. Supports 50+ video formats with FFmpeg processing pipeline.",
       githubLink: "https://github.com/aditya74841/Ai_Video_Summarizer",
       liveDemoLink: "https://ai-video-summarizer-qrmb.vercel.app/",
-      technologies: ["Next.js", "Node.js", "MongoDB", "Gemini API", "FFmpeg", "TypeScript"],
+      technologies: [
+        "Next.js",
+        "Node.js",
+        "MongoDB",
+        "Gemini API",
+        "FFmpeg",
+        "TypeScript",
+      ],
       featured: true,
-      category: "Full Stack",
+      category: "AI",
     },
-    {
-      id: 4,
-      imgSrc: IMG3.src,
-      title: "Task Management System",
-      description:
-        "Comprehensive task manager with JWT authentication, categories, priority levels, and visual progress tracking. Built with security-first design.",
-      githubLink: "https://github.com/aditya74841",
-      liveDemoLink: "https://p5.iamadityaranjan.com/login",
-      technologies: ["React", "Node.js", "JWT", "MongoDB"],
-      featured: true,
-      category: "Full Stack",
-    },
+    // {
+    //   id: 4,
+    //   imgSrc: IMG3.src,
+    //   title: "Task Management System",
+    //   description:
+    //     "Comprehensive task manager with JWT authentication, categories, priority levels, and visual progress tracking. Built with security-first design.",
+    //   githubLink: "https://github.com/aditya74841",
+    //   liveDemoLink: "https://p5.iamadityaranjan.com/login",
+    //   technologies: ["React", "Node.js", "JWT", "MongoDB"],
+    //   featured: true,
+    //   category: "Full Stack",
+    // },
     {
       id: 5,
       imgSrc: IMG12.src,
@@ -205,21 +238,26 @@ const Portfolio: React.FC = () => {
         "An AI-powered chat and search application that combines live web retrieval with LLM reasoning to deliver grounded, context-aware answers.",
       githubLink: "https://github.com/aditya74841/Web-browsing-AI-agents",
       liveDemoLink: "https://aibrowsing.iamadityaranjan.com/",
-      technologies: ["React",
+      technologies: [
+        "React",
         "Vite",
         "Tailwind CSS",
         "Node.js",
         "Express.js",
         "Groq",
         "Tavily API",
-        "express-rate-limit",],
+        "express-rate-limit",
+      ],
       featured: true,
       category: "Full Stack, AI",
     },
   ];
 
   return (
-    <section id="portfolio" className="py-20 md:py-28 bg-gray-950 relative overflow-hidden">
+    <section
+      id="portfolio"
+      className="py-20 md:py-28 bg-gray-950 relative overflow-hidden"
+    >
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div
@@ -255,7 +293,8 @@ const Portfolio: React.FC = () => {
                 Want to see more projects?
               </h3>
               <p className="text-gray-400 text-sm md:text-base">
-                Explore the complete project gallery with category filters and detailed breakdowns.
+                Explore the complete project gallery with category filters and
+                detailed breakdowns.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 shrink-0">

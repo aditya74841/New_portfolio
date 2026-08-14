@@ -1,0 +1,112 @@
+---
+title: "Building High-Performance Next.js 16 Applications with App Router"
+date: "2026-08-10"
+excerpt: "A deep dive into Next.js App Router architectural patterns, Server Components, and static generation strategies for modern portfolios and production apps."
+tags: ["Next.js", "React", "Web Architecture", "TypeScript"]
+featured: true
+published: true
+---
+
+The transition to **Next.js App Router** has transformed how we architect modern React applications. By shifting component rendering logic to the server by default, web applications achieve significantly smaller client JS bundles and blazing fast initial page loads.
+
+In this article, we'll explore key architectural patterns that ensure high performance and maintainability.
+
+## 1. Server Components vs Client Components
+
+One of the foundational concepts of Next.js App Router is the strict separation between Server Components and Client Components.
+
+- **Server Components (Default):** Rendered strictly on the server. They have zero impact on the client JavaScript bundle size and can fetch data directly from databases or external APIs.
+- **Client Components (`"use client"`):** Hydrated on the client to handle user interactions, state (`useState`, `useReducer`), and browser hooks (`useEffect`, event listeners).
+
+### Best Practice: Push Interactivity to the Leaves
+
+Keep your page routes and layouts as Server Components. Only designate small, specialized components as Client Components when interactive UI state is strictly required.
+
+```tsx
+// Example of a Server Component parent passing props to a Client Component
+import BlogListClient from "./BlogListClient";
+import { getAllPosts } from "@/lib/blog";
+
+export default async function BlogPage() {
+  const posts = await getAllPosts();
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold text-white mb-6">Latest Articles</h1>
+      <BlogListClient posts={posts} />
+    </main>
+  );
+}
+```
+
+---
+
+## 2. Static Site Generation (SSG) with `generateStaticParams`
+
+For dynamic blog routes like `/blog/[slug]`, Next.js allows pre-rendering pages at build time using `generateStaticParams`.
+
+```typescript
+import { getAllPosts, getPostBySlug } from "@/lib/blog";
+import { notFound } from "next/navigation";
+
+export async function generateStaticParams() {
+  const posts = getAllPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
+
+  if (!post) {
+    notFound();
+  }
+
+  return (
+    <article className="prose prose-invert max-w-4xl mx-auto">
+      <h1>{post.meta.title}</h1>
+      <p className="text-slate-400">{post.meta.date}</p>
+    </article>
+  );
+}
+```
+
+This guarantees that every blog post renders instantly as static HTML, serving users and search engine web crawlers with minimal latency.
+
+---
+
+## 3. Dynamic OpenGraph Metadata for SEO
+
+SEO is critical for developer portfolios and technical blogs. Next.js App Router makes dynamic OpenGraph generation straightforward with `generateMetadata()`:
+
+```typescript
+import { Metadata } from "next";
+import { getPostBySlug } from "@/lib/blog";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
+
+  if (!post) return {};
+
+  return {
+    title: `${post.meta.title} | Aditya Ranjan`,
+    description: post.meta.excerpt,
+    openGraph: {
+      title: post.meta.title,
+      description: post.meta.excerpt,
+      type: "article",
+      publishedTime: post.meta.date,
+      tags: post.meta.tags,
+    },
+  };
+}
+```
+
+---
+
+## Conclusion
+
+Combining Server Components, pre-rendered static routes, and clean folder structures enables developers to deliver ultra-fast web experiences without sacrificing developer ergonomics.

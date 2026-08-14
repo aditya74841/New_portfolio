@@ -80,7 +80,6 @@ export const projectsData: {
       priority: "high",
       icon: <Zap className="w-6 h-6" />,
     },
-    
   ],
   completedProjects: [
     {
@@ -88,7 +87,8 @@ export const projectsData: {
       title: "Url Shortner",
       description:
         "A lightning-fast URL shortening service with custom aliases, comprehensive analytics, and QR code generation. Features real-time click tracking and user dashboard.",
-      longDescription: "A powerful URL shortener built for performance and scalability. It allows users to create custom short links, track real-time analytics like click location and device type, and generate QR codes for offline sharing. The dashboard provides a comprehensive view of link performance.",
+      longDescription:
+        "A powerful URL shortener built for performance and scalability. It allows users to create custom short links, track real-time analytics like click location and device type, and generate QR codes for offline sharing. The dashboard provides a comprehensive view of link performance.",
       image: "/api/placeholder/400/300",
       category: "web-app",
       techStack: ["React", "Node.js", "MongoDB", "Express", "Chart.js"],
@@ -104,12 +104,14 @@ export const projectsData: {
       challenges: [
         {
           problem: "High concurrency link redirection",
-          solution: "Implemented Redis caching to store frequently accessed links, reducing database load and response time."
+          solution:
+            "Implemented Redis caching to store frequently accessed links, reducing database load and response time.",
         },
         {
           problem: "Tracking unique visitors without cookies",
-          solution: "Used fingerprinting techniques and IP hashing to estimate unique visitors while respecting privacy."
-        }
+          solution:
+            "Used fingerprinting techniques and IP hashing to estimate unique visitors while respecting privacy.",
+        },
       ],
       completedDate: "March 2025",
       complexity: "Low",
@@ -264,7 +266,8 @@ export const projectsData: {
       title: "Docs Hub - Technical Documentation Platform",
       description:
         "A comprehensive technical documentation platform designed to centralize development resources, API references, and project guides for developers and teams.",
-      longDescription: "Docs Hub is a centralized platform for managing and viewing technical documentation. It provides a seamless experience for developers to write, organize, and share API references and project guides. With support for MDX, it allows for rich content creation including live code snippets and interactive components.",
+      longDescription:
+        "Docs Hub is a centralized platform for managing and viewing technical documentation. It provides a seamless experience for developers to write, organize, and share API references and project guides. With support for MDX, it allows for rich content creation including live code snippets and interactive components.",
       image: "/api/placeholder/400/300",
       category: "documentation",
       techStack: ["React", "Next.js", "Tailwind CSS", "MDX", "Vercel"],
@@ -280,12 +283,14 @@ export const projectsData: {
       challenges: [
         {
           problem: "Managing large MDX content efficiently",
-          solution: "Implemented incremental static regeneration (ISR) to handle content updates without rebuilding the entire site."
+          solution:
+            "Implemented incremental static regeneration (ISR) to handle content updates without rebuilding the entire site.",
         },
         {
           problem: "Real-time search across documentation",
-          solution: "Integrated Algolia search for instant and relevant search results."
-        }
+          solution:
+            "Integrated Algolia search for instant and relevant search results.",
+        },
       ],
       completedDate: "November 2024",
       gradient: "from-blue-500 via-indigo-500 to-purple-500",
@@ -327,7 +332,7 @@ export const projectsData: {
         "A comprehensive meta tag generation platform featuring 17+ specialized generators for Open Graph and Twitter Cards, with real-time validation and live social media previews.",
       image: "/api/placeholder/400/300",
       category: "seo-tools",
-  
+
       techStack: [
         "React",
         "Next.js",
@@ -412,7 +417,6 @@ export const projectsData: {
       githubLink: "https://github.com/aditya74841/Ai_Video_Summarizer",
       liveDemoLink: "https://videosummary.iamadityaranjan.com/",
       features: [
-        
         "Real-time SSE processing pipeline",
         "Editable transcript workflow",
         "Short summary and detailed summary modes",
@@ -422,15 +426,79 @@ export const projectsData: {
       challenges: [
         {
           problem: "High latency in video-to-summary processing",
-          solution: "Implemented a real-time Server-Sent Events workflow to keep users informed while audio extraction, transcription, and summarization run asynchronously."
+          solution:
+            "Implemented a real-time Server-Sent Events workflow to keep users informed while audio extraction, transcription, and summarization run asynchronously.",
         },
         {
           problem: "Video handling and retention constraints",
-          solution: "Added upload validation, FFmpeg-based processing, temporary file cleanup, and browser-side IndexedDB retention for cached history."
-        }
+          solution:
+            "Added upload validation, FFmpeg-based processing, temporary file cleanup, and browser-side IndexedDB retention for cached history.",
+        },
       ],
       completedDate: "August 2025",
       gradient: "from-violet-500 via-fuchsia-500 to-pink-500",
+      difficulty: "Advanced",
+      complexity: "High",
+      duration: "4 days",
+    },
+    {
+      id: "proj-14",
+      title: "Clear Learn - AI Workspace",
+      description:
+        "An AI-powered learning workspace featuring context-aware subchat branching, real-time SSE streaming, Tavily web search, and an integrated rich-text notes system with vector semantic search.",
+      longDescription:
+        "Clear Learn is a production-ready AI chat and learning platform built to solve context fragmentation while studying complex topics. It enables users to branch main conversations into side-panel subchats with context snapshotting, capture live selections into rich-text notes, perform 1,536-dimensional vector embedding semantic searches over personal notes, and search the live web via Tavily tool calling.",
+      image: "/assets/clear_learn.png",
+      category: "ai",
+      techStack: [
+        "Next.js",
+        "React",
+        "JavaScript",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "Mongoose",
+        "Zustand",
+        "OpenRouter API",
+        "Tavily Search API",
+        "Quill Editor",
+        "Server-Sent Events (SSE)",
+        "Vector Embeddings",
+        "JWT / Passport.js",
+      ],
+      githubLink: "https://github.com/aditya74841/Clear_Learn",
+      liveDemoLink: "https://clearlearn.iamadityaranjan.com/",
+      features: [
+        "Real-time Server-Sent Events (SSE) streaming pipeline",
+        "Context-aware subchat branching with parent snapshotting",
+        "Floating text selection menu to save quotes into notes",
+        "Non-blocking 1,536-dim vector embeddings & semantic search",
+        "Automatic AI Web Search tool calling with Tavily",
+        "Split-view Quill rich-text notes with Markdown export",
+        "URL state sync without reloads (?chat=, ?subchat=, ?note=)",
+      ],
+      challenges: [
+        {
+          problem:
+            "Context pollution and flow breaking when inquiring about sub-topics or jargon in traditional AI chats.",
+          solution:
+            "Designed a context-aware Subchat Branching system that snapshots parent messages up to the branch point into an isolated side panel with compact response constraints.",
+        },
+        {
+          problem:
+            "High latency and UI blocking during vector embedding generation for user notes.",
+          solution:
+            "Offloaded embedding generation (text-embedding-3-small) to non-blocking background workers using setImmediate() with text hashing to skip redundant API calls.",
+        },
+        {
+          problem:
+            "Displaying real-time tool execution status before streaming AI response chunks.",
+          solution:
+            "Built a 3-step SSE pipeline that emits custom status event signals (e.g. searching web) prior to token streaming.",
+        },
+      ],
+      completedDate: "July 2026",
+      gradient: "from-blue-600 via-indigo-600 to-purple-600",
       difficulty: "Advanced",
       complexity: "High",
       duration: "4 days",

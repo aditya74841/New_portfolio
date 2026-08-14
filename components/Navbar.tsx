@@ -139,6 +139,17 @@ const Navbar: React.FC = () => {
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-2">
           <Link
+            href="/blog"
+            className={`text-xs font-mono px-2.5 py-1.5 transition-colors ${
+              pathname.startsWith("/blog")
+                ? "text-white font-bold"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            Blog
+          </Link>
+
+          <Link
             href="/projects"
             className="text-xs font-mono text-gray-400 hover:text-white px-2.5 py-1.5 transition-colors"
           >
@@ -191,21 +202,28 @@ const Navbar: React.FC = () => {
               </a>
             );
           })}
-          <div className="pt-3 border-t border-gray-900 flex items-center justify-between gap-2">
+          <div className="pt-3 border-t border-gray-900 grid grid-cols-3 gap-2">
             <Link
-              href="/cv"
+              href="/blog"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white text-gray-950 font-bold rounded-xl text-xs"
+              className="text-center py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-mono text-purple-300"
             >
-              <HiDocumentText />
-              <span>View CV</span>
+              Blog
             </Link>
             <Link
               href="/projects"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex-1 text-center py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-mono text-gray-300"
+              className="text-center py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-mono text-gray-300"
             >
-              All Projects
+              Projects
+            </Link>
+            <Link
+              href="/cv"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-1 py-2.5 bg-white text-gray-950 font-bold rounded-xl text-xs"
+            >
+              <HiDocumentText />
+              <span>CV</span>
             </Link>
           </div>
         </div>
