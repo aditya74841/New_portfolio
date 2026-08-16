@@ -123,6 +123,17 @@ export default async function BlogPostPage({ params }: PostPageProps) {
                     </div>
                 </header>
 
+                {/* Cover Image Banner */}
+                {post.meta.coverImage && (
+                    <div className="relative w-full aspect-[21/9] mb-10 rounded-3xl overflow-hidden border border-gray-800 shadow-xl bg-gray-900">
+                        <img
+                            src={post.meta.coverImage}
+                            alt={post.meta.title}
+                            className="object-cover w-full h-full"
+                        />
+                    </div>
+                )}
+
                 {/* Article Body Container */}
                 <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 sm:p-10 mb-12 shadow-xl">
                     <MDXContent source={post.content} />

@@ -9,12 +9,37 @@ interface BlogCardProps {
 }
 
 export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) => {
+    const hasImage = !!post.coverImage;
+
     return (
         <article
-            className={`group relative flex flex-col rounded-2xl bg-gray-900 border border-gray-800 p-6 transition-all duration-300 hover:border-gray-700 hover:shadow-xl ${featured ? "md:grid md:grid-cols-12 md:gap-6" : ""
-                }`}
+            className={`group relative flex flex-col rounded-2xl bg-gray-900 border border-gray-800 p-6 transition-all duration-300 hover:border-gray-700 hover:shadow-xl ${
+                featured && hasImage ? "md:grid md:grid-cols-12 md:gap-6" : ""
+            }`}
         >
-            <div className={`flex flex-col justify-between h-full ${featured ? "md:col-span-12" : ""}`}>
+            {featured && hasImage && (
+                <div className="relative w-full aspect-[16/10] md:aspect-auto md:min-h-[240px] md:col-span-5 rounded-xl overflow-hidden border border-gray-800 mb-4 md:mb-0">
+                    <img
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="object-cover w-full h-full group-hover:scale-[1.02] transition-transform duration-300"
+                    />
+                </div>
+            )}
+
+            {!featured && hasImage && (
+                <div className="relative w-full aspect-[16/9] mb-4 rounded-xl overflow-hidden border border-gray-800">
+                    <img
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                    />
+                </div>
+            )}
+
+            <div className={`flex flex-col justify-between h-full ${
+                featured ? (hasImage ? "md:col-span-7" : "md:col-span-12") : ""
+            }`}>
                 <div>
                     {/* Header Badges & Meta */}
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs font-mono text-gray-400">
@@ -39,8 +64,9 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) =>
 
                     {/* Title */}
                     <h2
-                        className={`font-bold text-white tracking-tight group-hover:text-gray-200 transition-colors mb-3 ${featured ? "text-2xl md:text-3xl" : "text-xl"
-                            }`}
+                        className={`font-bold text-white tracking-tight group-hover:text-gray-200 transition-colors mb-3 ${
+                            featured ? "text-2xl md:text-3xl" : "text-xl"
+                        }`}
                     >
                         <Link href={`/blog/${post.slug}`} className="focus:outline-none">
                             <span className="absolute inset-0" aria-hidden="true" />
