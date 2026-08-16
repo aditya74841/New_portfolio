@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, Tag, User } from "lucide-react";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import MDXContent from "@/components/blog/MDXContent";
+import LanguageToggleClient from "@/components/blog/LanguageToggleClient";
 
 interface PostPageProps {
     params: Promise<{
@@ -61,6 +62,12 @@ export default async function BlogPostPage({ params }: PostPageProps) {
     if (!post || !post.meta.published) {
         notFound();
     }
+
+    // Find other versions sharing the same translation key
+    const allPosts = getAllPosts();
+    const translations = post.meta.translationKey
+        ? allPosts.filter((p) => p.translationKey === post.meta.translationKey && p.slug !== slug)
+        : [];
 
     return (
         <main className="min-h-screen bg-gray-950 text-white pt-28 pb-20 px-4 sm:px-6 lg:px-8">
@@ -125,13 +132,21 @@ export default async function BlogPostPage({ params }: PostPageProps) {
 
                 {/* Cover Image Banner */}
                 {post.meta.coverImage && (
-                    <div className="relative w-full aspect-[21/9] mb-10 rounded-3xl overflow-hidden border border-gray-800 shadow-xl bg-gray-900">
+                    <div className="relative w-full aspect-[21/9] mb-6 rounded-3xl overflow-hidden border border-gray-800 shadow-xl bg-gray-900">
                         <img
                             src={post.meta.coverImage}
                             alt={post.meta.title}
                             className="object-cover w-full h-full"
                         />
                     </div>
+                )}
+
+                {/* Translation Toggle Option */}
+                {translations.length > 0 && (
+                    <LanguageToggleClient 
+                        currentLanguage={post.meta.language || "en"} 
+                        translations={translations.map(t => ({ slug: t.slug, language: t.language }))} 
+                    />
                 )}
 
                 {/* Article Body Container */}

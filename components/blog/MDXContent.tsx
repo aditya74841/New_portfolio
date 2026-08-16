@@ -3,28 +3,28 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 
 const components = {
     h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-        <h1 className="text-3xl font-bold text-white tracking-tight mt-10 mb-4 border-b border-gray-800 pb-3" {...props} />
+        <h1 className="text-4xl font-bold text-white tracking-tight mt-10 mb-4 border-b border-gray-800 pb-3" {...props} />
     ),
     h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-        <h2 className="text-2xl font-bold text-white tracking-tight mt-8 mb-3" {...props} />
+        <h2 className="text-3xl font-bold text-white tracking-tight mt-8 mb-3" {...props} />
     ),
     h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-        <h3 className="text-xl font-semibold text-gray-100 mt-6 mb-2" {...props} />
+        <h3 className="text-2xl font-semibold text-white mt-6 mb-2" {...props} />
     ),
     p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
-        <p className="text-gray-300 text-base leading-relaxed mb-5" {...props} />
+        <p className="text-white text-lg sm:text-[19px] leading-relaxed mb-6" {...props} />
     ),
     ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
-        <ul className="list-disc list-inside text-gray-300 space-y-2 mb-6 ml-2" {...props} />
+        <ul className="list-disc list-inside text-white space-y-2 mb-6 ml-2 text-lg sm:text-[19px]" {...props} />
     ),
     ol: (props: React.OlHTMLAttributes<HTMLOListElement>) => (
-        <ol className="list-decimal list-inside text-gray-300 space-y-2 mb-6 ml-2" {...props} />
+        <ol className="list-decimal list-inside text-white space-y-2 mb-6 ml-2 text-lg sm:text-[19px]" {...props} />
     ),
     li: (props: React.LiHTMLAttributes<HTMLLIElement>) => (
-        <li className="text-gray-300 inline-block w-full" {...props} />
+        <li className="text-white inline-block w-full text-lg sm:text-[19px]" {...props} />
     ),
     blockquote: (props: React.BlockquoteHTMLAttributes<HTMLQuoteElement>) => (
-        <blockquote className="border-l-4 border-gray-600 bg-gray-950 px-5 py-4 rounded-r-xl my-6 text-gray-200 italic" {...props} />
+        <blockquote className="border-l-4 border-gray-600 bg-gray-950 px-5 py-4 rounded-r-xl my-6 text-white italic text-lg sm:text-[19px]" {...props} />
     ),
     pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
         <pre className="bg-gray-950 border border-gray-800 rounded-xl p-4 overflow-x-auto text-sm font-mono text-gray-200 my-6 shadow-xl" {...props} />
@@ -57,7 +57,7 @@ interface MDXContentProps {
 
 export default function MDXContent({ source }: MDXContentProps) {
     return (
-        <div className="prose prose-invert max-w-none">
+        <div className="prose prose-invert max-w-none" style={{ wordSpacing: "2px" }}>
             <MDXRemote source={source} components={components} />
         </div>
     );

@@ -16,6 +16,8 @@ export interface BlogPostMeta {
     };
     featured?: boolean;
     published?: boolean;
+    language?: string;
+    translationKey?: string;
 }
 
 export interface BlogPost {
@@ -63,6 +65,8 @@ export function getAllPosts(): BlogPostMeta[] {
                 author: data.author || { name: "Aditya Ranjan" },
                 featured: Boolean(data.featured),
                 published: data.published !== false,
+                language: data.language || undefined,
+                translationKey: data.translationKey || undefined,
             };
 
             return meta;
@@ -103,6 +107,8 @@ export function getPostBySlug(slug: string): BlogPost | null {
         author: data.author || { name: "Aditya Ranjan" },
         featured: Boolean(data.featured),
         published: data.published !== false,
+        language: data.language || undefined,
+        translationKey: data.translationKey || undefined,
     };
 
     return {
