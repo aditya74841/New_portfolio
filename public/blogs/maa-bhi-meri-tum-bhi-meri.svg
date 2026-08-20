@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">माँ भी मेरी, तुम भी मेरी</title>
+  <desc id="desc">A pencil sketch of a son holding the hands of his mother and beloved.</desc>
+  <rect width="1600" height="900" fill="#f4efe5"/>
+  <path d="M0 730c260-80 430-20 690-55 270-37 510-48 910 35v190H0Z" fill="#e7dfd1"/>
+  <g fill="none" stroke="#302d29" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M120 190c90-70 210-92 320-46M1130 128c130-45 258-20 350 55M180 690c160-40 278-27 395 16M1090 680c130-48 265-35 370 22" stroke="#9b9183" stroke-width="5" opacity=".65"/>
+    <path d="M214 420c-28-95 9-210 116-249 100-37 206 21 223 127 12 72-26 143-82 180" stroke-width="9"/>
+    <path d="M259 325c38-81 126-122 207-66 30 21 48 55 55 92M290 426c46 40 129 47 180 5M320 472c-15 68-29 142-40 215M469 461c25 64 44 140 50 216" stroke-width="9"/>
+    <path d="M280 270c26-41 67-68 112-72M430 280c24 28 35 65 33 103" stroke-width="10"/>
+    <path d="M303 357h12M428 357h12M335 402c28 22 55 23 82 2" stroke-width="9"/>
+    <path d="M1372 415c30-112-37-223-147-246-112-23-207 56-206 167 1 74 46 135 110 168" stroke-width="9"/>
+    <path d="M1065 286c33-55 94-90 158-88 78 3 132 57 151 121M1071 414c52 37 125 42 182 1M1126 474c-8 73-12 142-12 215M1282 463c-11 76-13 145-4 226" stroke-width="9"/>
+    <path d="M1080 293c28-49 77-83 130-89M1307 288c22 25 35 58 38 91" stroke-width="10"/>
+    <path d="M1099 363h12M1224 363h12M1132 407c25 20 52 20 78-1" stroke-width="9"/>
+    <path d="M515 535c95 30 161 84 251 127 38 18 71 10 81-17 10-27-11-49-38-64l-109-61M1084 532c-93 35-154 87-248 131-37 18-70 12-81-15-11-27 9-50 36-66l107-64" stroke-width="11"/>
+    <path d="M762 592c-21-39-8-91 37-112 45-22 93 8 102 55 8 42-20 77-54 96M760 598c-13 86-16 160-5 222M895 610c19 77 27 145 21 211M720 816c70-21 142-20 211 2" stroke-width="11"/>
+    <path d="M791 500c9-46 35-74 73-76 36-2 65 29 69 70M796 566h12M867 566h12M810 607c22 18 45 18 67 0" stroke-width="9"/>
+    <path d="M755 708c40 26 92 27 133 2" stroke-width="8"/>
+    <path d="M730 260h138M730 290h138" stroke="#857b70" stroke-width="4" opacity=".8"/>
+  </g>
+  <g fill="#302d29" font-family="serif" text-anchor="middle">
+    <text x="800" y="115" font-size="58" font-weight="700">माँ भी मेरी, तुम भी मेरी</text>
+    <text x="800" y="175" font-size="28" fill="#70675d">सम्मान और मोहब्बत के बीच एक दिल की बात</text>
+  </g>
+  <g fill="#9b5947" opacity=".8">
+    <path d="M800 245c-18-27-67-13-67 25 0 44 67 76 67 76s67-32 67-76c0-38-49-52-67-25Z"/>
+  </g>
+</svg>

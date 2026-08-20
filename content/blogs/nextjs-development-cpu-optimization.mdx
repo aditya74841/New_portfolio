@@ -1,0 +1,253 @@
+---
+title: "My 8-Core CPU Was at 100%: How I Fixed My Next.js Development Setup"
+date: "2026-08-20"
+excerpt: "How I investigated high CPU and memory usage in a local Next.js and Node.js development environment, then stabilized it by tuning Nodemon, Node.js, Turbopack, and orphaned processes."
+tags: ["Next.js", "Node.js", "Performance", "Development Tools"]
+coverImage: "/blogs/nextjs-development-cpu-optimization.svg"
+published: true
+featured: false
+---
+
+A few days ago, my computer started behaving strangely.
+
+My **8-core CPU was running at almost 100%** while I was simply developing my application. The machine sounded like it was preparing for takeoff.
+
+At first, I thought something was wrong with my computer. After digging into the problem, I realized that **my development environment was the problem**.
+
+In this post, I'll explain what I found, what I changed, and what I learned from it.
+
+## The Problem: My CPU Was Working Too Hard
+
+I was running my Next.js frontend and Node.js backend locally. Everything looked normal at first, but after some time, CPU usage would suddenly become extremely high.
+
+My machine would become slow, the fans would start running aggressively, and sometimes the entire computer would become unstable.
+
+I started by checking which processes were consuming the most CPU. Next.js and Nodemon were the main suspects.
+
+## 1. Nodemon Was Watching Too Much
+
+My backend was using Nodemon, but I didn't have a proper `nodemon.json` configuration. That meant Nodemon could end up watching much more of the project than necessary.
+
+For a large project, continuously watching files that don't need to be watched creates unnecessary work. I created this configuration:
+
+```json
+{
+  "watch": ["src"],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules",
+    ".git",
+    "public",
+    "*.log"
+  ]
+}
+```
+
+Now Nodemon only watches the important part of my backend:
+
+```text
+src/
+```
+
+Instead of watching the entire project, it focuses on the source files that can actually change the running backend. This made a noticeable difference.
+
+## 2. Next.js Was Also Consuming Resources
+
+The frontend was another story. I was using Next.js in development mode:
+
+```bash
+next dev
+```
+
+Development mode does a lot of work behind the scenes. It needs to:
+
+- compile code
+- watch files
+- rebuild changed files
+- maintain development caches
+- support Hot Module Replacement
+- process the application continuously
+
+The larger the project becomes, the more resources development mode can consume.
+
+## 3. I Increased the Node.js Memory Limit
+
+I also started seeing Node.js memory-related crashes, so I initially added this to my `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--max-old-space-size=2048' next dev"
+  }
+}
+```
+
+Here, `2048` means 2048 MB, or approximately 2 GB. This increases the maximum old-space heap size available to Node.js.
+
+But there was a problem. I had basically told Node:
+
+> You can use up to 2 GB.
+
+Once the application needed more memory and garbage collection couldn't free enough space, Node could eventually crash with an error like this:
+
+```text
+FATAL ERROR: Ineffective mark-compacts near heap limit
+Allocation failed - JavaScript heap out of memory
+```
+
+That was frustrating because I had to restart the frontend again.
+
+## 4. I Increased It From 2 GB to 4 GB
+
+My machine had enough RAM, so I increased the limit:
+
+```json
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev"
+  }
+}
+```
+
+`4096` means 4096 MB, or approximately 4 GB. This gave the Next.js development process more room to work.
+
+However, even after fixing the memory issues, CPU usage could still become extremely high. I continued investigating.
+
+## 5. I Found Another Problem: Turbopack
+
+I was using **Next.js 16**, where Turbopack is the default development bundler. Turbopack is designed to make development faster, but that does not mean it will always use fewer resources.
+
+My project included dynamic content, Markdown processing, and streaming, so I tested the development server using Webpack instead:
+
+```bash
+npx next dev --webpack
+```
+
+The difference was significant. I changed my `package.json` to:
+
+```json
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev --webpack"
+  }
+}
+```
+
+Now I'm explicitly telling Next.js to use Webpack for development instead of the default Turbopack setup. For my project, this significantly reduced CPU usage.
+
+The best bundler can depend on the project. Turbopack may be the right choice for many applications, but measuring both options is more useful than assuming one will behave best everywhere.
+
+## 6. I Found One More Problem: Orphaned Processes
+
+This was probably the most interesting part of the debugging process.
+
+Sometimes I would stop the development server and start it again, but not every process was actually gone. Some old `next-server` processes were still running in the background.
+
+I checked the running processes with:
+
+```bash
+ps aux | grep -E "node|next|nodemon"
+```
+
+I found old processes still running, killed them, and started the development server again:
+
+```bash
+pkill -f "next" || true
+npm run dev
+```
+
+After cleaning up the old processes, the application became much more stable.
+
+Be careful with broad process-killing commands on shared machines or when running multiple projects. Confirm the matching processes first, and only terminate the processes that belong to the project you are debugging.
+
+## My Final Setup
+
+My frontend development command is now:
+
+```json
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev --webpack"
+  }
+}
+```
+
+And my backend has a controlled Nodemon configuration:
+
+```json
+{
+  "watch": ["src"],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules",
+    ".git",
+    "public",
+    "*.log"
+  ]
+}
+```
+
+The important thing is that I didn't solve the problem by simply throwing more RAM at it. I had to identify **what was actually consuming the resources**.
+
+## What I Learned
+
+When your computer becomes slow while developing, don't immediately assume:
+
+> I need a better computer.
+
+First ask:
+
+> **What exactly is consuming my CPU and memory?**
+
+In my case, there wasn't one single problem.
+
+**CPU problems:**
+
+- Next.js development workload
+- Turbopack
+- Nodemon watching too many files
+- leftover Next.js processes
+
+**Memory problems:**
+
+- Next.js development workload
+- compiler and development caches
+- Node.js heap reaching its limit
+
+Once I separated these problems, the solution became much easier.
+
+## One Important Lesson
+
+`--max-old-space-size=4096` does **not** mean:
+
+> Give Node.js 4 GB of RAM.
+
+It means:
+
+> **Allow V8's old-generation heap to grow up to roughly 4 GB.**
+
+Giving Node more memory does not automatically fix high CPU usage.
+
+CPU and memory are two different problems. If your CPU is at 100%, increasing the Node.js memory limit may not solve anything. If Node is crashing because of heap exhaustion, switching bundlers alone may not solve that either.
+
+You need to identify the actual bottleneck first.
+
+## Final Result
+
+After cleaning up the old processes, limiting Nodemon's file watching, increasing the Node.js heap limit, and switching my Next.js development server to Webpack, my development environment became much more stable.
+
+The biggest lesson for me was simple:
+
+**Don't blindly optimize your code or upgrade your hardware.**
+
+Sometimes the problem is sitting right inside your development tools.
+
+And sometimes the best debugging tool is simply:
+
+```bash
+ps aux --sort=-%cpu | head
+```
+
+Seeing **what is actually using your CPU** can tell you more than hours of guessing.
+
+That was my little "why is my computer trying to fly?" debugging session.
