@@ -13,7 +13,7 @@ export default function JsonLd() {
       "https://x.com/adixranjan08",
       "https://leetcode.com/aditya7884"
     ],
-    jobTitle: "Full Stack Developer",
+    jobTitle: "Full Stack Software Developer",
     worksFor: {
       "@type": "Organization",
       name: "CodenCreative",
@@ -21,7 +21,7 @@ export default function JsonLd() {
     },
     alumniOf: {
       "@type": "CollegeOrUniversity",
-      name: "Amritsar College of Engineering and Technology"
+      name: "Amritsar College of Engineering & Technology"
     },
     knowsAbout: [
       "Full Stack Development",
@@ -29,20 +29,29 @@ export default function JsonLd() {
       "Next.js",
       "Node.js",
       "TypeScript",
-      "MongoDB",
+      "Redux",
+      "TailwindCSS",
       "Express.js",
-      "Python",
-      "AI Integration",
-      "Gemini API",
-      "Docker",
-      "REST APIs"
+      "MongoDB",
+      "Vector Databases",
+      "Embeddings",
+      "Semantic Search",
+      "RESTful APIs",
+      "JWT Authentication",
+      "Socket.io",
+      "WebSockets",
+      "OpenRouter API",
+      "Tavily API",
+      "RAG",
+      "LLM Integration",
+      "Prompt Engineering"
     ],
     hasOccupation: {
       "@type": "Occupation",
-      name: "Full Stack Developer",
-      description: "Builds full-stack web applications using React, Next.js, Node.js, and MongoDB with AI integration capabilities."
+      name: "Full Stack Software Developer",
+      description: "Full Stack Developer building production web applications using React, Next.js, Node.js, Express, MongoDB with AI integrations (LLMs, RAG, embeddings, semantic search)."
     },
-    description: "Full Stack Developer with 2+ years of experience in React, Next.js, Node.js, and AI integration. Building high-performance web applications and open source tools.",
+    description: "Full Stack Developer with 2.5+ years building production apps using React, Next.js, Node.js, Express, MongoDB. Skilled in REST APIs, real-time systems, optimization, and AI integrations with LLMs, RAG, embeddings, and semantic search.",
     address: {
       "@type": "PostalAddress",
       addressCountry: "IN"

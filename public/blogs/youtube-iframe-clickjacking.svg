@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="100%" height="100%" role="img" aria-labelledby="title desc">
+  <title id="title">YouTube iframe &amp; Clickjacking Security Sketch</title>
+  <desc id="desc">Hand-drawn sketchy illustration of an iframe loading YouTube, blocked by X-Frame-Options security headers to prevent clickjacking.</desc>
+  
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+
+    <!-- Sketchy rough filter effect for hand-drawn pencil look -->
+    <filter id="sketchyFilter" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#38bdf8" flood-opacity="0.3" />
+    </filter>
+
+    <filter id="redGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#f43f5e" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1600" height="900" fill="url(#bgGrad)" />
+
+  <!-- Grid lines background for technical drawing paper feel -->
+  <g opacity="0.07" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="8 8">
+    <path d="M0 100h1600M0 200h1600M0 300h1600M0 400h1600M0 500h1600M0 600h1600M0 700h1600M0 800h1600" />
+    <path d="M200 0v900M400 0v900M600 0v900M800 0v900M1000 0v900M1200 0v900M1400 0v900" />
+  </g>
+
+  <!-- MAIN SKETCH CONTAINER (Applied Rough Filter for Hand-Drawn Pencil Feel) -->
+  <g filter="url(#sketchyFilter)">
+
+    <!-- Browser Window Sketch -->
+    <rect x="180" y="140" width="860" height="580" rx="16" fill="#1e293b" stroke="#64748b" stroke-width="4" opacity="0.9" />
+    <!-- Browser Top Bar -->
+    <rect x="180" y="140" width="860" height="60" rx="16" fill="#0f172a" stroke="#64748b" stroke-width="3" />
+    <!-- Window Control Dots (Sketchy Circles) -->
+    <circle cx="220" cy="170" r="10" fill="#f43f5e" stroke="#e11d48" stroke-width="2" />
+    <circle cx="255" cy="170" r="10" fill="#fbbf24" stroke="#d97706" stroke-width="2" />
+    <circle cx="290" cy="170" r="10" fill="#10b981" stroke="#059669" stroke-width="2" />
+    <!-- URL Bar -->
+    <rect x="340" y="152" width="660" height="36" rx="8" fill="#1e293b" stroke="#475569" stroke-width="2" />
+    <text x="360" y="176" fill="#94a3b8" font-family="monospace" font-size="16">https://my-ai-summarizer.com/app</text>
+
+    <!-- Inside Browser Content Area -->
+    <!-- App Header Sketch -->
+    <text x="230" y="245" fill="#f8fafc" font-family="sans-serif" font-size="24" font-weight="bold">AI Video Summarizer</text>
+    <rect x="230" y="260" width="300" height="12" rx="6" fill="#334155" />
+
+    <!-- Embedded iframe Container -->
+    <rect x="230" y="300" width="760" height="370" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="4" stroke-dasharray="12 6" />
+    
+    <!-- iframe Tag Label Sketch -->
+    <rect x="245" y="315" width="360" height="36" rx="6" fill="#1e1b4b" stroke="#6366f1" stroke-width="2" />
+    <text x="260" y="339" fill="#a5b4fc" font-family="monospace" font-size="16" font-weight="bold">&lt;iframe src="https://youtube.com"&gt;</text>
+
+    <!-- Blocked YouTube Screen Effect inside iframe -->
+    <g transform="translate(420, 380)">
+      <!-- YouTube Sketchy Logo / Play Button -->
+      <rect x="120" y="10" width="140" height="90" rx="20" fill="#dc2626" opacity="0.8" stroke="#f87171" stroke-width="3" />
+      <polygon points="175,38 175,72 205,55" fill="#ffffff" />
+      
+      <!-- Error Notice Hand-drawn Box -->
+      <rect x="30" y="130" width="320" height="60" rx="10" fill="#451a03" stroke="#f59e0b" stroke-width="3" />
+      <text x="190" y="166" text-anchor="middle" fill="#fef3c7" font-family="monospace" font-size="18" font-weight="bold">youtube.com refused to connect.</text>
+    </g>
+
+    <!-- RIGHT SIDE: SECURITY & CLICKJACKING EXPLANATION SKETCH -->
+    <!-- Sketchy Security Shield -->
+    <g transform="translate(1120, 150)" filter="url(#glow)">
+      <!-- Shield Outline -->
+      <path d="M150 40 C 230 40, 270 70, 270 170 C 270 290, 170 370, 150 400 C 130 370, 30 290, 30 170 C 30 70, 70 40, 150 40 Z" fill="#0f172a" stroke="#38bdf8" stroke-width="5" />
+      <path d="M150 55 C 215 55, 250 80, 250 165 C 250 270, 165 345, 150 375 C 135 345, 50 270, 50 165 C 50 80, 85 55, 150 55 Z" fill="none" stroke="#0284c7" stroke-width="3" stroke-dasharray="6 6" />
+
+      <!-- Lock Icon inside Shield -->
+      <rect x="110" y="180" width="80" height="75" rx="10" fill="#38bdf8" stroke="#0284c7" stroke-width="3" />
+      <path d="M125 180 V 145 C 125 125, 175 125, 175 145 V 180" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" />
+      <circle cx="150" cy="210" r="8" fill="#0f172a" />
+      <path d="M150 215 v 18" stroke="#0f172a" stroke-width="4" stroke-linecap="round" />
+    </g>
+
+    <!-- Sketchy Hand-drawn Annotations & Headers -->
+    <!-- Response Header Card Sketch -->
+    <g transform="translate(1100, 570)" filter="url(#redGlow)">
+      <rect x="0" y="0" width="370" height="150" rx="14" fill="#1e1b4b" stroke="#818cf8" stroke-width="4" />
+      <text x="20" y="40" fill="#f43f5e" font-family="monospace" font-size="20" font-weight="bold">HTTP Response Header:</text>
+      <rect x="15" y="55" width="340" height="40" rx="6" fill="#0f172a" stroke="#f43f5e" stroke-width="2" />
+      <text x="28" y="82" fill="#fb7185" font-family="monospace" font-size="18" font-weight="bold">X-Frame-Options: DENY</text>
+      <text x="20" y="125" fill="#cbd5e1" font-family="sans-serif" font-size="15" font-style="italic">Prevents unauthorized iframe framing</text>
+    </g>
+
+    <!-- Sketchy Connecting Arrows -->
+    <g stroke="#f59e0b" stroke-width="4" stroke-linecap="round" fill="none">
+      <!-- Arrow pointing from header to iframe -->
+      <path d="M1095 630 C 1030 630, 1020 540, 990 540" stroke-dasharray="8 6" />
+      <polygon points="995,532 980,540 995,548" fill="#f59e0b" />
+    </g>
+
+    <!-- Decorative Hand-Drawn Doodle Notes -->
+    <g transform="translate(230, 750)">
+      <text x="0" y="0" fill="#38bdf8" font-family="monospace" font-size="22" font-weight="bold">💡 Discovery: Framing Restrictions &amp; Clickjacking Protection</text>
+      <path d="M0 10 h 680" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 4" />
+    </g>
+
+    <!-- Sketchy Cloud / Thought Bubble Doodle for 'Why?' -->
+    <g transform="translate(950, 70)">
+      <path d="M20 50 Q 0 30 30 20 Q 50 0 80 15 Q 110 0 130 20 Q 160 30 140 60 Q 150 90 120 90 Q 90 100 70 85 Q 30 100 20 70 Z" fill="#1e293b" stroke="#f59e0b" stroke-width="3" />
+      <text x="80" y="52" text-anchor="middle" fill="#fbbf24" font-family="sans-serif" font-size="20" font-weight="bold">Why?</text>
+    </g>
+  </g>
+</svg>

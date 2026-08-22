@@ -250,11 +250,11 @@ const Experience: React.FC = () => {
   const educationData: EducationItem[] = [
     {
       id: 1,
-      institution: "Amritsar College of Engineering and Technology",
-      degree: "B.Tech in Computer Science & Engineering",
-      duration: "2020 - 2024",
+      institution: "Amritsar College of Engineering & Technology",
+      degree: "Bachelor of Technology in Computer Science",
+      duration: "2019 - 2023",
       location: "Punjab, India",
-      grade: "CGPA: 8.2",
+      grade: "CGPA: 7.4",
       description: "Focused on Software Engineering, Data Structures, Algorithms, Database Management Systems, and Web Technologies.",
       icon: FaGraduationCap,
       color: "from-blue-500 to-indigo-600"
@@ -266,26 +266,25 @@ const Experience: React.FC = () => {
       id: 1,
       company: "CodenCreative",
       position: "Full Stack Developer",
-      duration: "Feb 2024 - Present",
+      duration: "Feb 2024 - Dec 2025",
       location: "Remote",
       type: "Full-time",
       link: "https://codencreative.com/",
-      description: "Building and shipping full-stack SaaS products for clients across multiple industries. Architected REST APIs handling 1000+ concurrent requests, migrated legacy React codebases to Next.js for 40% faster TTI, and integrated Gemini AI features into production platforms.",
-      technologies: ["React", "Next.js", "Node.js", "MongoDB", "Express.js", "Gemini API"],
+      description: "Improved e-commerce application performance through backend query optimization, code splitting, and CDN integration. Developed secure REST APIs using Node.js, Express, MongoDB, and JWT-based authentication/RBAC.",
+      technologies: ["React.js", "Next.js", "Node.js", "Express.js", "MongoDB", "Redux", "TailwindCSS"],
       icon: MdWorkOutline,
-      color: "from-purple-500 to-pink-600",
-      status: "current"
+      color: "from-purple-500 to-pink-600"
     },
     {
       id: 2,
-      company: "Black Water Coffee Pvt Ltd.",
+      company: "BlackWater Coffee Pvt Ltd.",
       position: "Full Stack Developer",
-      duration: "Nov 2022 - Jan 2024",
+      duration: "Dec 2022 - Jan 2024",
       location: "Hybrid",
       type: "Full-time",
       link: "https://www.linkedin.com/company/black-water-coffee-company-limited/about/",
-      description: "Built a full POS (Point of Sale) system from scratch, reducing order processing time by 35%. Developed a cross-platform mobile prototype using React Native that handled real-time order management across 5+ outlets.",
-      technologies: ["React", "React Native", "Node.js", "MongoDB", "Express.js", "Next.js"],
+      description: "Developed a full-stack POS and inventory management system with real-time stock tracking, automated low-stock alerts, and multi-user authentication. Integrated a Socket.io-based Kitchen Display System (KDS) for order synchronization between POS and kitchen.",
+      technologies: ["React", "Node.js", "Express.js", "MongoDB", "Socket.io", "WebSockets"],
       icon: FaBriefcase,
       color: "from-orange-500 to-red-600"
     }
