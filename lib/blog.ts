@@ -2,6 +2,12 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 
+export interface BlogSeriesInfo {
+    id: string;
+    title: string;
+    order: number;
+}
+
 export interface BlogPostMeta {
     slug: string;
     title: string;
@@ -18,6 +24,8 @@ export interface BlogPostMeta {
     published?: boolean;
     language?: string;
     translationKey?: string;
+    availableLangs?: string[];
+    series?: BlogSeriesInfo;
 }
 
 export interface BlogPost {
@@ -34,6 +42,19 @@ function calculateReadingTime(text: string): string {
     const words = text.trim().split(/\s+/).length;
     const minutes = Math.ceil(words / 200);
     return `${minutes} min read`;
+}
+
+/**
+ * Helper to parse series frontmatter safely
+ */
+function parseSeries(dataSeries: any): BlogSeriesInfo | undefined {
+    if (!dataSeries || typeof dataSeries !== "object") return undefined;
+    if (!dataSeries.id || !dataSeries.title || typeof dataSeries.order !== "number") return undefined;
+    return {
+        id: String(dataSeries.id),
+        title: String(dataSeries.title),
+        order: Number(dataSeries.order),
+    };
 }
 
 /**
@@ -67,6 +88,7 @@ export function getAllPosts(): BlogPostMeta[] {
                 published: data.published !== false,
                 language: data.language || undefined,
                 translationKey: data.translationKey || undefined,
+                series: parseSeries(data.series),
             };
 
             return meta;
@@ -109,6 +131,7 @@ export function getPostBySlug(slug: string): BlogPost | null {
         published: data.published !== false,
         language: data.language || undefined,
         translationKey: data.translationKey || undefined,
+        series: parseSeries(data.series),
     };
 
     return {

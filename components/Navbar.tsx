@@ -139,14 +139,14 @@ const Navbar: React.FC = () => {
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-2">
           <Link
-            href="/blog"
+            href="/blogs"
             className={`text-xs font-mono px-2.5 py-1.5 transition-colors ${
-              pathname.startsWith("/blog")
+              pathname.startsWith("/blogs")
                 ? "text-white font-bold"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            Blog
+            Blogs
           </Link>
 
           <Link
@@ -204,11 +204,11 @@ const Navbar: React.FC = () => {
           })}
           <div className="pt-3 border-t border-gray-900 grid grid-cols-3 gap-2">
             <Link
-              href="/blog"
+              href="/blogs"
               onClick={() => setMobileMenuOpen(false)}
               className="text-center py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-mono text-purple-300"
             >
-              Blog
+              Blogs
             </Link>
             <Link
               href="/projects"

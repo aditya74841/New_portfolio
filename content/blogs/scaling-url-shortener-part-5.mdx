@@ -1,0 +1,947 @@
+---
+title: "What Happens When Your Analytics Worker Crashes?"
+date: "2026-09-04"
+excerpt: "Most developers design for success. Production doesn't care about your happy path. Here is how I handled worker crashes, at-least-once delivery, and idempotency."
+tags: ["Tech", "Redis", "Architecture", "System Design", "Node.js", "Queues"]
+coverImage: "/blogs/analytics-worker-crash-sketch.svg"
+language: "en"
+translationKey: "scaling-url-shortener-part-5"
+series:
+  id: "url-shortener"
+  title: "URL Shortener Series: Scaling from CRUD to Production"
+  order: 5
+featured: false
+published: true
+---
+
+**Most developers design for success. Production doesn't care about your happy path.**
+
+There is a category of bugs that rarely appears during development.
+
+They don't show up when you're clicking around your application.
+
+They don't appear during a demo.
+
+They don't necessarily crash the server.
+
+And sometimes, they don't even produce an error.
+
+They simply make your data wrong.
+
+These bugs usually appear when something fails halfway through an operation.
+
+- A process crashes.
+- A server restarts.
+- A deployment happens at exactly the wrong moment.
+- A worker runs out of memory.
+- A network connection disappears.
+
+The system was designed for:
+
+```
+Request → Process → Success
+```
+
+But production asks a different question:
+
+> **What happens when the process stops between those two steps?**
+
+I encountered this question while building analytics for my URL shortener.
+
+And it led me to two concepts that completely changed how I think about background jobs:
+
+**at-least-once processing** and **idempotency**.
+
+## The Feature: Recording Analytics
+
+My URL shortener needed to record clicks.
+
+At first, "record a click" sounded like a single operation.
+
+But it actually contains two different concerns.
+
+### Concern 1: Redirect the user
+
+The user clicks:
+
+`https://myapp.com/abc123`
+
+They expect to be redirected immediately.
+
+### Concern 2: Record analytics
+
+The system might want to store:
+
+- `shortCode`
+- `userAgent`
+- `referrer`
+- `ip` address
+- `timestamp`
+- `device`
+- `browser`
+
+The user doesn't need to wait for all of that.
+
+That distinction matters.
+
+My original implementation did everything inside the request:
+
+```javascript
+app.get("/:shortCode", async (req, res) => {
+  const doc = await ShortUrl.findOne({
+    short: shortCode,
+  });
+
+  if (!doc) {
+    return res.status(404).send("Not found");
+  }
+
+  await Analytics.create({
+    shortCode,
+    userAgent: req.headers["user-agent"],
+    referrer: req.headers["referer"],
+    timestamp: new Date(),
+  });
+
+  res.redirect(doc.full);
+});
+```
+
+It worked.
+
+But there was a problem.
+
+The user had to wait for the analytics database write before receiving the redirect.
+
+And analytics isn't part of the user's primary request.
+
+So I started thinking:
+
+**Why should the user wait for work they don't care about?**
+
+## Moving Analytics Out of the Critical Path
+
+The redirect is the critical operation.
+
+The user needs:
+
+```
+Request
+   ↓
+Find URL
+   ↓
+Redirect
+```
+
+Analytics can happen separately.
+
+So I changed the architecture.
+
+**Before**
+
+```
+Request
+   ↓
+Find URL
+   ↓
+Write Analytics
+   ↓
+Redirect
+   ↓
+User receives response
+```
+
+The analytics database write sits directly in the user's request path.
+
+**After**
+
+```
+                ┌──────────────→ Redirect
+                 │
+Request → Find URL
+                 │
+                 └──────────────→ Queue Event
+                                      │
+                                      ▼
+                                    Worker
+                                      │
+                                      ▼
+                                  MongoDB
+```
+
+Now the request handler has a much simpler responsibility:
+
+Find the destination, enqueue the analytics event, and redirect.
+
+I already had Redis in the architecture for caching, so I used Redis as a simple queue rather than introducing another piece of infrastructure.
+
+The request handler became something like:
+
+```javascript
+const event = {
+  shortCode,
+  userAgent: req.headers["user-agent"],
+  referrer: req.headers["referer"] || "",
+  ip: req.ip,
+  timestamp: new Date().toISOString(),
+};
+
+await redis.lpush("analytics:queue", JSON.stringify(event));
+
+res.redirect(doc.full);
+```
+
+The worker then processes events separately:
+
+```javascript
+while (true) {
+  const raw = await redis.rpop("analytics:queue");
+
+  if (!raw) {
+    await sleep(100);
+    continue;
+  }
+
+  const event = JSON.parse(raw);
+
+  await Analytics.create(event);
+}
+```
+
+This was much better.
+
+The redirect no longer depended on MongoDB analytics processing.
+
+But then I asked the question that changed the design again.
+
+## What Happens When the Worker Crashes?
+
+Workers crash.
+
+It's not a matter of if.
+
+- A process can be killed.
+- A container can restart.
+- A deployment can terminate the process.
+- A machine can run out of memory.
+- A network connection can fail.
+
+So imagine this sequence.
+
+Our queue contains:
+
+`[event_A, event_B, event_C]`
+
+The worker executes:
+
+`const raw = await redis.rpop("analytics:queue");`
+
+Redis gives the worker:
+
+`event_C`
+
+and removes it from the queue.
+
+The queue is now:
+
+`[event_A, event_B]`
+
+The worker starts processing:
+
+`event_C`
+
+And then...
+
+💥 **Worker crashes**
+
+Maybe the process is killed.
+
+Maybe the machine restarts.
+
+Maybe the container is replaced.
+
+The worker never reaches:
+
+`await Analytics.create(event);`
+
+When the worker starts again, the queue contains:
+
+`[event_A, event_B]`
+
+**Where is event_C? Gone.**
+
+The worker had removed it from Redis before successfully processing it.
+
+The event is lost.
+
+And the worst part?
+
+The application might continue working perfectly.
+
+The user gets their redirect.
+
+There is no obvious error.
+
+**But your analytics are now silently wrong.**
+
+## The Problem With RPOP
+
+This is the important distinction:
+
+`RPOP`
+
+means:
+
+`Remove the item from the queue and give it to me.`
+
+Once Redis performs the operation, the event is no longer in the main queue.
+
+So the lifecycle looks like:
+
+```
+Queue
+  │
+  │ RPOP
+  ▼
+Worker memory
+  │
+  │
+  │ 💥 crash
+  ▼
+Event disappears
+```
+
+The worker temporarily becomes the only place where that event exists.
+
+That's dangerous.
+
+We need another state.
+
+Instead of:
+
+`Queue → Worker memory`
+
+we want:
+
+`Queue → Processing queue → Worker`
+
+The event should remain recoverable while the worker is processing it.
+
+## The Fix: RPOPLPUSH
+
+Redis provides an operation called:
+
+`RPOPLPUSH`
+
+It removes an item from one list and pushes it into another.
+
+For our use case:
+
+`analytics:queue → analytics:processing`
+
+The operation is atomic from Redis's perspective.
+
+In code:
+
+```javascript
+const raw = await redis.rpoplpush("analytics:queue", "analytics:processing");
+```
+
+Now the architecture becomes:
+
+```
+Main Queue                 Processing Queue
+──────────                 ────────────────
+
+[event_A] ───────────────→ [event_C]
+[event_B]
+```
+
+The event isn't simply deleted.
+
+It moves into a place where we know:
+
+`This worker has taken responsibility for processing this event.`
+
+That's a much safer model.
+
+## What Happens If the Worker Crashes Now?
+
+Let's replay the same failure.
+
+The queue contains:
+
+`[event_A, event_B, event_C]`
+
+The worker executes:
+
+`RPOPLPUSH`
+
+Now:
+
+```
+Main Queue              Processing Queue
+
+[event_A]               [event_C]
+[event_B]
+```
+
+The worker starts processing event_C.
+
+Then:
+
+💥 **Worker crashes**
+
+But this time:
+
+`event_C`
+
+still exists.
+
+It's sitting inside:
+
+`analytics:processing`
+
+The event hasn't disappeared.
+
+A recovery mechanism can detect that the event has been stuck for too long and put it back into the main queue.
+
+For example:
+
+```javascript
+const stuck = await redis.lrange("analytics:processing", 0, -1);
+
+for (const raw of stuck) {
+  const event = JSON.parse(raw);
+
+  const age = Date.now() - new Date(event.timestamp).getTime();
+
+  if (age > 60_000) {
+    await redis.lrem("analytics:processing", 1, raw);
+
+    await redis.lpush("analytics:queue", raw);
+  }
+}
+```
+
+The exact recovery strategy can become more sophisticated in a real production system, but the fundamental idea is simple:
+
+> **Don't consider a message finished just because a worker received it. It is finished only after the processing succeeds and the message is removed from the processing state.**
+
+## We Just Introduced At-Least-Once Delivery
+
+This design gives us an important property:
+
+An event can be processed again if the system isn't sure whether the previous attempt completed.
+
+That's called **at-least-once delivery**.
+
+The system tries to ensure that an event is processed at least once.
+
+But there is a catch.
+
+And this is where distributed systems become interesting.
+
+## The New Problem: What If We Process the Same Event Twice?
+
+Suppose the worker receives:
+
+`event_C`
+
+It writes the event to MongoDB successfully:
+
+`MongoDB: event_C ✅`
+
+But immediately after that...
+
+💥 **Worker crashes**
+
+The worker never gets to execute:
+
+```javascript
+await redis.lrem("analytics:processing", 1, raw);
+```
+
+So the processing queue still contains:
+
+`[event_C]`
+
+The recovery process eventually sees it.
+
+It assumes:
+
+`"This event got stuck."`
+
+So it puts it back into the main queue.
+
+The worker processes it again.
+
+And writes:
+
+`event_C`
+
+to MongoDB again.
+
+Now we have:
+
+```
+One real click
+       ↓
+Two analytics records
+       ↓
+❌ Incorrect analytics
+```
+
+We solved event loss.
+
+**But we introduced duplicate processing.**
+
+This is the trade-off of at-least-once delivery.
+
+## This Is Where Idempotency Comes In
+
+The solution is **idempotency**.
+
+> **An operation is idempotent when performing it multiple times produces the same intended result as performing it once.**
+
+For our analytics system, we need to answer:
+
+`"Has this particular event already been processed?"`
+
+So every event gets a unique identifier.
+
+For example:
+
+```javascript
+const { nanoid } = require("nanoid");
+
+const event = {
+  eventId: nanoid(),
+  shortCode,
+  userAgent: req.headers["user-agent"],
+  referrer: req.headers["referer"] || "",
+  timestamp: new Date().toISOString(),
+};
+```
+
+Now the event might look like:
+
+```json
+{
+  "eventId": "xyz123",
+  "shortCode": "abc456"
+}
+```
+
+The important part is:
+
+`eventId = xyz123`
+
+That identifier follows the event throughout its lifecycle.
+
+## Using Redis SET NX
+
+Redis provides another useful primitive:
+
+`SET NX`
+
+**NX means: Set this key only if it doesn't already exist.**
+
+So the worker can attempt to claim the event:
+
+```javascript
+async function processEvent(event) {
+  const key = `processed:${event.eventId}`;
+
+  const acquired = await redis.set(key, "1", "EX", 86400, "NX");
+
+  if (!acquired) {
+    return;
+  }
+
+  await Analytics.create(event);
+}
+```
+
+The important part is `"NX"`.
+
+If the key doesn't exist: `SET processed:xyz123 NX` succeeds.
+
+If it already exists: `SET processed:xyz123 NX` fails.
+
+That gives us a way to recognize that an event has already been claimed.
+
+## Two Workers, One Event
+
+Imagine something goes wrong and two workers attempt to process the same event.
+
+Both see: `eventId = xyz123`
+
+Worker 1 executes: `SET processed:xyz123 NX` → **SUCCESS**
+
+Worker 2 executes: `SET processed:xyz123 NX` → **NULL** (because key exists)
+
+```
+Worker 1
+   │
+   ├── SET NX → success
+   │
+   └── process event
+
+
+Worker 2
+   │
+   ├── SET NX → already exists
+   │
+   └── skip duplicate
+```
+
+This is the basic idea behind idempotency.
+
+## But There Is an Important Detail
+
+There is something I would not claim here:
+
+`"SET NX gives us exactly-once processing."`
+
+It doesn't.
+
+It gives us an atomic way to establish a processing marker, but there is still a failure window between:
+
+`SET processed:eventId` and `MongoDB write`.
+
+For example:
+
+```
+SET NX
+   ↓
+Worker crashes
+   ↓
+MongoDB write never happens
+```
+
+Now the marker exists, but the analytics record doesn't.
+
+That's why production-grade idempotency often requires carefully designing the relationship between the idempotency record and the actual business write.
+
+One common approach is to put a unique constraint on the event ID in the database and treat duplicate inserts as harmless. Another is to use a durable state machine or transaction when the database and workflow require it.
+
+The important lesson is:
+
+> **Idempotency is not simply "put a lock around the function." It is about designing the operation so that retries are safe.**
+
+For this project, Redis `SET NX` helped me understand the primitive and the failure mode. A production implementation should choose the exact consistency strategy based on the database and business requirements.
+
+## The Architecture After All of This
+
+What started as:
+
+```
+Request
+   ↓
+Analytics.create()
+   ↓
+Redirect
+```
+
+eventually became:
+
+```
+                REQUEST PATH
+                 ─────────────
+
+Request
+   │
+   ├── Find URL
+   │
+   ├── LPUSH analytics event
+   │
+   └── 302 Redirect
+              │
+              │
+              ▼
+
+             QUEUE
+        analytics:queue
+              │
+              │ RPOPLPUSH
+              ▼
+
+       PROCESSING QUEUE
+     analytics:processing
+              │
+              ▼
+            Worker
+              │
+              ├── SET NX
+              │
+              ├── Write MongoDB
+              │
+              └── Remove from processing
+
+
+             RECOVERY
+        ───────────────
+              │
+              ▼
+    Check processing queue
+              │
+              ▼
+    Find stuck events
+              │
+              ▼
+       Requeue for retry
+```
+
+The user never has to wait for the analytics database write.
+
+And the worker has a recovery path if it crashes.
+
+That's a much more resilient architecture than the original implementation.
+
+## What This Taught Me About Failure Thinking
+
+Before this project, I naturally designed around the happy path.
+
+Something like:
+
+```
+Event arrives
+   ↓
+Worker processes event
+   ↓
+Database write succeeds
+   ↓
+Done
+```
+
+But production doesn't only execute the happy path.
+
+Production also executes:
+
+- Event arrives → Worker crashes
+- Database write succeeds → Worker crashes
+- Worker processes event twice
+- Queue grows faster than worker can consume it
+
+Once you start asking these questions, architecture becomes much more interesting.
+
+I started thinking about each step as:
+
+> **What happens if the process stops right here?**
+
+That one question exposed failure modes I had never considered when the application was simply a CRUD project.
+
+## Failure Scenario → Design Decision
+
+This became my mental checklist:
+
+| Failure                                | Design Response                             |
+| :------------------------------------- | :------------------------------------------ |
+| Worker crashes before processing       | Keep event in processing queue              |
+| Worker crashes after database write    | Make retries safe with idempotency          |
+| Event gets processed twice             | Unique event ID + duplicate detection       |
+| Processing is too slow                 | Multiple workers / batching                 |
+| Queue grows continuously               | Monitor queue depth and apply back-pressure |
+| Worker disappears                      | Supervisor/container restarts it            |
+| Processing state contains stuck events | Recovery mechanism                          |
+
+The important part isn't memorizing `RPOPLPUSH` or `SET NX`.
+
+It's learning to connect:
+
+```
+Failure
+   ↓
+Required guarantee
+   ↓
+Design primitive
+```
+
+For example:
+
+```
+Worker crash
+   ↓
+Don't lose the event
+   ↓
+Processing queue
+```
+
+And:
+
+```
+Retry
+   ↓
+Duplicates are possible
+   ↓
+Idempotency
+```
+
+That's the engineering thinking I was looking for when I started this project.
+
+## At-Least-Once vs Exactly-Once
+
+This distinction is worth understanding.
+
+### At-most-once
+
+An event is processed zero or one time.
+
+- Could be lost: **Yes**
+- Could be duplicated: **No**
+
+You avoid duplicates by not retrying aggressively, but failures can cause lost messages.
+
+### At-least-once
+
+An event should be processed one or more times.
+
+- Shouldn't be lost: **Yes**
+- May be processed more than once: **Yes**
+
+This is why idempotency becomes important.
+
+### Exactly-once
+
+The goal is:
+
+```
+One logical event
+       ↓
+One logical effect
+```
+
+But exactly-once semantics are much harder than simply adding a queue and a lock.
+
+Failures can occur between systems.
+
+A worker can crash after one side succeeds and before the other side records the result.
+
+That's why production systems often focus on:
+
+> **At-least-once delivery + idempotent processing**
+
+rather than assuming the entire distributed workflow can magically be exactly-once.
+
+That distinction was one of the most valuable things I learned from this project.
+
+## The Pattern Generalizes Beyond URL Shorteners
+
+The URL shortener is just a convenient example.
+
+The same problem appears whenever you have background processing:
+
+```
+User action
+    ↓
+Queue
+    ↓
+Worker
+    ↓
+Database / external service
+```
+
+Think about:
+
+- sending emails
+- processing payments
+- generating reports
+- resizing images
+- video processing
+- sending notifications
+- updating search indexes
+- processing webhooks
+- generating invoices
+
+In every one of these systems, eventually someone has to ask:
+
+`What happens if the worker dies right here?`
+
+That question is more important than the happy path.
+
+## What I Actually Learned
+
+The biggest lesson wasn't Redis.
+
+It wasn't `RPOPLPUSH`.
+
+It wasn't even `SET NX`.
+
+It was a change in how I think about software.
+
+Earlier, I mostly asked:
+
+`"Does this feature work?"`
+
+Now I also ask:
+
+> **"What happens when this feature partially fails?"**
+
+That's a completely different question.
+
+A system that works when everything goes according to plan is easy to build.
+
+The interesting engineering starts when you ask:
+
+- What if the worker crashes?
+- What if the database is temporarily unavailable?
+- What if the same event arrives twice?
+- What if the network fails after the database commits?
+- What if the queue grows faster than we can process it?
+
+These aren't pessimistic questions.
+
+They're production questions.
+
+## The Takeaway
+
+My analytics system started with a simple idea:
+
+`Record the click.`
+
+Then I asked:
+
+`What happens if the worker crashes?`
+
+That question forced the architecture to evolve.
+
+First: `RPOP` could lose events.
+
+So I introduced: `RPOPLPUSH` and a processing queue.
+
+That gave me an **at-least-once processing model**, where unfinished work could be recovered.
+
+Then I discovered the other side of that guarantee:
+
+`Retrying means an event can be processed more than once.`
+
+So I introduced: `eventId` and an idempotency mechanism using `SET NX`.
+
+The important lesson wasn't the commands.
+
+It was the reasoning:
+
+```
+Worker crash
+      ↓
+Need recovery
+      ↓
+At-least-once processing
+      ↓
+Retries can duplicate work
+      ↓
+Need idempotency
+```
+
+That's the pattern.
+
+And once you understand the pattern, queues stop looking like magical infrastructure.
+
+You start understanding why they have the guarantees they have — and what can still go wrong.
+
+> **Designing for failure isn't pessimism. It's the difference between software that works in a demo and software that has a chance of behaving correctly in production.**
+
+This post is part of a series about rebuilding a URL shortener from a basic CRUD application into a production-oriented system — one engineering problem at a time.
+
+**Thanks for reading! Subscribe for free to receive new posts and support my work.**

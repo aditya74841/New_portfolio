@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <pattern id="sketch-grid-5" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow-5" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid-5)" />
+
+  <!-- Outer Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="900 6 300 4" />
+
+  <!-- Header -->
+  <text x="60" y="75" font-family="'Courier New', Courier, monospace" font-size="30" font-weight="bold" fill="#1d2d44">What Happens When Your Analytics Worker Crashes?</text>
+  <line x1="60" y1="90" x2="1140" y2="90" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="95" x2="940" y2="95" stroke="#d90429" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- LEFT PANEL: UNRELIABLE RPOP WORKER CRASH -->
+  <g filter="url(#hand-shadow-5)">
+    <rect x="60" y="125" width="530" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="85" y="160" font-family="'Courier New', Courier, monospace" font-size="19" font-weight="bold" fill="#d90429">⚠️ Naive Queue (RPOP Data Loss)</text>
+
+    <!-- Main Queue -->
+    <rect x="85" y="190" width="480" height="60" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="100" y="215" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#1d2d44">Main Queue: analytics:queue</text>
+    <text x="100" y="235" font-family="sans-serif" font-size="13" fill="#d90429">[ event_A , event_B ]  &lt;-- RPOP pops event_C</text>
+
+    <!-- Worker Arrow Down -->
+    <path d="M 325 250 L 325 295" stroke="#d90429" stroke-width="3" />
+    <text x="335" y="278" font-family="sans-serif" font-size="12" font-weight="bold" fill="#d90429">RPOP (Popped &amp; Deleted from DB)</text>
+
+    <!-- Worker In-Memory Box -->
+    <rect x="85" y="295" width="480" height="100" fill="#ffe5ec" stroke="#d90429" stroke-width="2.5" rx="5" />
+    <text x="105" y="325" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#900c3f">Worker Memory (Processing event_C)</text>
+    <text x="105" y="355" font-family="sans-serif" font-size="15" font-weight="bold" fill="#d90429">💥 WORKER CRASHES HERE! (OOM / Restart)</text>
+    <text x="105" y="378" font-family="sans-serif" font-size="13" fill="#555">Analytics DB write never executed.</text>
+
+    <!-- Consequence Banner -->
+    <rect x="85" y="420" width="480" height="165" fill="#f8f9fa" stroke="#d90429" stroke-width="2" stroke-dasharray="4 3" rx="4" />
+    <text x="105" y="450" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#d90429">❌ RESULT: SILENT DATA LOSS</text>
+    <text x="105" y="475" font-family="sans-serif" font-size="13" fill="#2b2d42">• event_C is deleted from Redis.</text>
+    <text x="105" y="498" font-family="sans-serif" font-size="13" fill="#2b2d42">• event_C was never saved to MongoDB.</text>
+    <text x="105" y="521" font-family="sans-serif" font-size="13" fill="#2b2d42">• Redirect worked (200 OK), but analytics are wrong!</text>
+    <text x="105" y="550" font-family="sans-serif" font-style="italic" fill="#777">"Nobody noticed — missing event gone forever."</text>
+  </g>
+
+  <!-- RIGHT PANEL: RELIABLE RPOPLPUSH + IDEMPOTENCY -->
+  <g filter="url(#hand-shadow-5)">
+    <rect x="620" y="125" width="520" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="645" y="160" font-family="'Courier New', Courier, monospace" font-size="19" font-weight="bold" fill="#1b4332">✅ Resilient Queue (RPOPLPUSH + SET NX)</text>
+
+    <!-- Main Queue & Processing Queue -->
+    <rect x="645" y="190" width="220" height="70" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="655" y="215" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#1d2d44">Main Queue</text>
+    <text x="655" y="240" font-family="sans-serif" font-size="12" fill="#555">[ event_A, event_B ]</text>
+
+    <path d="M 865 225 L 915 225" stroke="#2b9348" stroke-width="3" />
+
+    <rect x="915" y="190" width="200" height="70" fill="#d8f3dc" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="925" y="215" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#1b4332">Processing Queue</text>
+    <text x="925" y="240" font-family="sans-serif" font-size="12" font-weight="bold" fill="#2b9348">[ event_C ]</text>
+
+    <!-- Idempotency & Worker Box -->
+    <rect x="645" y="280" width="470" height="150" fill="#caf0f8" stroke="#0077b6" stroke-width="2" rx="5" />
+    <text x="665" y="310" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#03045e">Worker + Idempotency Guard</text>
+    <text x="665" y="335" font-family="'Courier New', Courier, monospace" font-size="13" fill="#1d2d44">1. SET processed:eventId NX (1 day EX)</text>
+    <text x="665" y="360" font-family="sans-serif" font-size="13" fill="#2b2d42">2. MongoDB.Analytics.create(event)</text>
+    <text x="665" y="385" font-family="'Courier New', Courier, monospace" font-size="13" fill="#2b9348">3. LREM analytics:processing 1 event_C</text>
+    <text x="665" y="410" font-family="sans-serif" font-size="12" fill="#555">🔄 Recovery process requeues stuck events if worker dies.</text>
+
+    <!-- Result Banner Right -->
+    <rect x="645" y="450" width="470" height="135" fill="#e8f5e9" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="480" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">✔ AT-LEAST-ONCE + IDEMPOTENCY</text>
+    <text x="665" y="505" font-family="sans-serif" font-size="13" fill="#2b2d42">• Zero lost events on worker crashes!</text>
+    <text x="665" y="528" font-family="sans-serif" font-size="13" fill="#2b2d42">• Zero duplicate writes on retries!</text>
+    <text x="665" y="555" font-family="sans-serif" font-weight="bold" fill="#0077b6">"Designing for failure in production."</text>
+  </g>
+</svg>

@@ -1,6 +1,4 @@
-import React from "react";
 import Link from "next/link";
-import { Calendar, Clock, ArrowRight, Tag } from "lucide-react";
 import { BlogPostMeta } from "@/lib/blog";
 
 interface BlogCardProps {
@@ -8,105 +6,98 @@ interface BlogCardProps {
     featured?: boolean;
 }
 
-export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) => {
+export default function BlogCard({ post, featured = false }: BlogCardProps) {
     const hasImage = !!post.coverImage;
+    const hasMultipleLangs =
+        post.availableLangs && post.availableLangs.length > 1;
 
-    return (
-        <article
-            className={`group relative flex flex-col rounded-2xl bg-gray-900 border border-gray-800 p-6 transition-all duration-300 hover:border-gray-700 hover:shadow-xl ${
-                featured && hasImage ? "md:grid md:grid-cols-12 md:gap-6" : ""
-            }`}
-        >
-            {featured && hasImage && (
-                <div className="relative w-full aspect-[16/10] md:aspect-auto md:min-h-[240px] md:col-span-5 rounded-xl overflow-hidden border border-gray-800 mb-4 md:mb-0">
+    // Featured: wide horizontal card — image left, content right
+    if (featured && hasImage) {
+        return (
+            <Link
+                href={`/blogs/${post.slug}`}
+                className="group flex flex-col sm:flex-row rounded-xl border border-gray-800 hover:border-gray-600 bg-gray-900 overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+            >
+                <div className="w-full sm:w-2/5 aspect-[4/3] sm:aspect-auto overflow-hidden bg-gray-800 shrink-0">
                     <img
                         src={post.coverImage}
                         alt={post.title}
-                        className="object-cover w-full h-full group-hover:scale-[1.02] transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
                     />
                 </div>
-            )}
-
-            {!featured && hasImage && (
-                <div className="relative w-full aspect-[16/9] mb-4 rounded-xl overflow-hidden border border-gray-800">
-                    <img
-                        src={post.coverImage}
-                        alt={post.title}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                    />
-                </div>
-            )}
-
-            <div className={`flex flex-col justify-between h-full ${
-                featured ? (hasImage ? "md:col-span-7" : "md:col-span-12") : ""
-            }`}>
-                <div>
-                    {/* Header Badges & Meta */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs font-mono text-gray-400">
-                        <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-gray-400">
-                                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                {post.date}
-                            </span>
-                            <span className="text-gray-700">•</span>
-                            <span className="flex items-center gap-1.5 text-gray-400">
-                                <Clock className="w-3.5 h-3.5 text-gray-400" />
-                                {post.readTime}
-                            </span>
-                        </div>
-
-                        {featured && (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-800 text-white border border-gray-700">
-                                Featured Article
+                <div className="flex flex-col justify-center p-6 sm:p-8 flex-1">
+                    <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-mono text-gray-600 uppercase tracking-widest">
+                            Featured
+                        </p>
+                        {hasMultipleLangs && (
+                            <span className="text-[10px] font-mono text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">
+                                EN · HI
                             </span>
                         )}
                     </div>
-
-                    {/* Title */}
-                    <h2
-                        className={`font-bold text-white tracking-tight group-hover:text-gray-200 transition-colors mb-3 ${
-                            featured ? "text-2xl md:text-3xl" : "text-xl"
-                        }`}
-                    >
-                        <Link href={`/blog/${post.slug}`} className="focus:outline-none">
-                            <span className="absolute inset-0" aria-hidden="true" />
-                            {post.title}
-                        </Link>
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-100 group-hover:text-white transition-colors leading-snug mb-3">
+                        {post.title}
                     </h2>
-
-                    {/* Excerpt */}
-                    <p className="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3">
+                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 mb-5">
                         {post.excerpt}
                     </p>
+                    <p className="text-xs font-mono text-gray-600">
+                        {post.date}&nbsp;&nbsp;·&nbsp;&nbsp;{post.readTime}
+                    </p>
                 </div>
+            </Link>
+        );
+    }
 
-                {/* Footer: Tags & Read More */}
-                <div className="flex items-center justify-between gap-4 pt-4 border-t border-gray-800 mt-auto">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {post.tags.slice(0, 3).map((tag) => (
-                            <span
-                                key={tag}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-gray-800 text-gray-300 border border-gray-700"
-                            >
-                                <Tag className="w-3 h-3 text-gray-400" />
-                                {tag}
-                            </span>
-                        ))}
-                        {post.tags.length > 3 && (
-                            <span className="text-xs text-gray-400 font-mono">
-                                +{post.tags.length - 3}
-                            </span>
-                        )}
-                    </div>
+    // Regular card
+    return (
+        <Link
+            href={`/blogs/${post.slug}`}
+            className="group flex flex-col rounded-xl border border-gray-800 hover:border-gray-600 bg-gray-900 overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+        >
+            {/* Cover image */}
+            {hasImage && (
+                <div className="w-full aspect-[16/9] overflow-hidden bg-gray-800">
+                    <img
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    />
+                </div>
+            )}
 
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-white group-hover:text-gray-300 group-hover:translate-x-1 transition-all">
-                        <span>Read</span>
-                        <ArrowRight className="w-4 h-4" />
+            {/* Content */}
+            <div className="flex flex-col flex-1 p-5">
+                {post.series && (
+                    <div className="mb-2">
+                        <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800/80">
+                            Series: Part {post.series.order}
+                        </span>
                     </div>
+                )}
+
+                <h2 className="text-[15px] font-semibold text-gray-100 group-hover:text-white transition-colors leading-snug mb-2 line-clamp-2">
+                    {post.title}
+                </h2>
+
+                <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4 flex-1">
+                    {post.excerpt}
+                </p>
+
+                <div className="flex items-center justify-between text-xs font-mono text-gray-600">
+                    <span>
+                        {post.date}&nbsp;&nbsp;·&nbsp;&nbsp;{post.readTime}
+                    </span>
+                    {hasMultipleLangs && (
+                        <span className="text-[10px] text-gray-400 bg-gray-800/80 px-1.5 py-0.5 rounded border border-gray-700/60">
+                            EN · HI
+                        </span>
+                    )}
                 </div>
             </div>
-        </article>
+        </Link>
     );
-};
+}
 
-export default BlogCard;
+export { BlogCard };

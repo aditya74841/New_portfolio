@@ -1,0 +1,680 @@
+---
+title: "Your Click Counter Is Lying to You (And You Don't Know It)"
+date: "2026-09-04"
+excerpt: "How a simple click counter introduced me to race conditions, atomic operations, and concurrent writes — and why MongoDB's $inc operator solved it."
+tags: ["Tech", "MongoDB", "Database", "System Design", "Node.js"]
+coverImage: "/blogs/click-counter-race-condition-sketch.svg"
+language: "en"
+translationKey: "scaling-url-shortener-part-3"
+series:
+  id: "url-shortener"
+  title: "URL Shortener Series: Scaling from CRUD to Production"
+  order: 3
+featured: false
+published: true
+---
+
+Your Click Counter Is Lying to You (And You Don't Know It)
+
+**My URL shortener was counting clicks. It was wrong. Nobody noticed — including me.**
+
+The bug wasn't loud.
+
+It didn't crash the server.
+
+It didn't throw an exception.
+
+There was no scary stack trace waiting for me in the terminal.
+
+The application looked perfectly healthy.
+
+The URL redirected correctly.
+
+The server responded correctly.
+
+MongoDB was connected.
+
+The click counter was increasing.
+
+There was only one problem:
+
+**The number was sometimes wrong.**
+
+And the most dangerous part?
+
+**I had no idea.**
+
+This is the story of how a simple click counter introduced me to race conditions, atomic operations, and concurrent writes — and why a single MongoDB operator, `$inc`, was a much better solution than trying to fix the problem in application code.
+
+## The Feature That Seemed Finished
+
+When I originally built my URL shortener, I wanted to track how many times each short URL had been clicked.
+
+The logic seemed straightforward.
+
+A user visits:
+
+`https://myapp.com/abc123`
+
+My server finds the corresponding URL in MongoDB, increments the click count, and redirects the user.
+
+The implementation looked something like this:
+
+```javascript
+app.get("/:shortCode", async (req, res) => {
+  const doc = await ShortUrl.findOne({
+    short: req.params.shortCode
+  });
+
+  if (!doc) {
+    return res.status(404).send("Not found");
+  }
+
+  doc.clicks = doc.clicks + 1;
+
+  await doc.save();
+
+  res.redirect(doc.full);
+});
+```
+
+I tested it.
+
+Click the URL:
+
+`0 → 1`
+
+Click it again:
+
+`1 → 2`
+
+Again:
+
+`2 → 3`
+
+Everything worked.
+
+So I moved on.
+
+That was my mistake.
+
+## The Hidden Assumption
+
+My test contained an assumption I didn't realize I was making:
+
+**Only one request would update the counter at a time.**
+
+When I clicked the link manually, that's exactly what happened.
+
+One request came in.
+
+The server read the document.
+
+The server incremented the value.
+
+The server saved it.
+
+Then the next request came in.
+
+But real applications don't work like that.
+
+Imagine your URL suddenly gets shared on social media.
+
+Or someone puts it inside a newsletter.
+
+Or a popular website links to it.
+
+Or a bot starts crawling it.
+
+Suddenly, you don't have one request.
+
+You have dozens, hundreds, or thousands of requests arriving at nearly the same time.
+
+And that's when my innocent-looking code becomes dangerous.
+
+## Two Users Click at the Same Time
+
+Let's make the problem concrete.
+
+Suppose the database currently contains:
+
+`clicks = 10`
+
+Now User A and User B click the same short URL almost simultaneously.
+
+You might expect:
+
+`10 + 1 + 1 = 12`
+
+But that's not necessarily what happens.
+
+Here's the timeline:
+
+```
+User A                         User B
+──────                         ──────
+
+findOne()
+   ↓
+reads clicks = 10
+
+                               findOne()
+                                  ↓
+                               reads clicks = 10
+
+clicks = 10 + 1
+   ↓
+local value = 11
+
+                               clicks = 10 + 1
+                                  ↓
+                               local value = 11
+
+save()
+   ↓
+database = 11
+
+                               save()
+                                  ↓
+                               database = 11
+
+Final result:
+Expected: 12
+Actual:   11
+```
+
+Two clicks happened.
+
+The database recorded one.
+
+The second write simply overwrote the first.
+
+**This is a race condition.**
+
+## What Exactly Is a Race Condition?
+
+**A race condition happens when the correctness of a program depends on the timing or ordering of concurrent operations.**
+
+In our case, two requests are racing to update the same piece of data.
+
+If User A completely finishes before User B starts:
+
+```
+A reads 10
+A writes 11
+
+B reads 11
+B writes 12
+```
+
+Everything is correct.
+
+But if both requests read the value before either one writes:
+
+```
+A reads 10
+B reads 10
+
+A writes 11
+B writes 11
+```
+
+**We've lost an update.**
+
+The important thing is that nothing technically failed.
+
+MongoDB accepted both writes.
+
+The application didn't crash.
+
+The requests may both return HTTP 302.
+
+**But the data is wrong.**
+
+**That's what makes race conditions so dangerous.**
+
+## The Real Problem: Read → Modify → Write
+
+Once I understood what was happening, I realized the problem wasn't really MongoDB.
+
+**The problem was the way I was performing the update.**
+
+My application was doing three separate operations:
+
+1. **Read**
+2. **Modify**
+3. **Write**
+
+In code:
+
+```javascript
+const doc = await ShortUrl.findOne({
+  short: shortCode
+});
+
+doc.clicks = doc.clicks + 1;
+
+await doc.save();
+```
+
+**Between the read and the write, there is a window of time.**
+
+During that window, another request can read the same value.
+
+That's where the race happens.
+
+The database doesn't know that my three steps are supposed to represent one logical operation.
+
+From MongoDB's perspective, it simply sees:
+
+```
+Read
+...
+Write
+```
+
+and another request can arrive in between.
+
+## "But I'm Using async/await"
+
+This was one of the first questions I had.
+
+Could async/await prevent this?
+
+**No.**
+
+**async/await controls how your JavaScript code waits for asynchronous operations. It does not make a sequence of database operations atomic.**
+
+While this request is waiting for MongoDB:
+
+```javascript
+const doc = await ShortUrl.findOne(...);
+```
+
+the Node.js process can continue handling other requests.
+
+So this:
+
+```javascript
+const doc = await findOne();
+doc.clicks++;
+await doc.save();
+```
+
+does not mean:
+
+`Nobody else can touch this document until I'm finished.`
+
+It simply means:
+
+`Resume this function when the database operation finishes.`
+
+**Those are very different things.**
+
+## What About a JavaScript Lock?
+
+Another possible solution is to introduce a mutex.
+
+The idea is simple:
+
+```
+User A → 🔒 enters critical section
+           reads
+           increments
+           writes
+         🔓 releases lock
+
+User B → waits
+
+User B → 🔒 enters
+           reads
+           increments
+           writes
+         🔓 releases
+```
+
+This can work when everything happens inside a single process.
+
+But there's a bigger problem.
+
+**The lock lives in the memory of that process.**
+
+Imagine we eventually scale the application across multiple processes:
+
+```
+Process 1                    Process 2
+─────────                    ─────────
+
+mutex                        mutex
+
+locked                       unlocked
+```
+
+These are two completely different mutexes.
+
+Process 2 doesn't know that Process 1 has acquired its lock.
+
+So:
+
+```
+Request A → Process 1 → acquires lock ✅
+
+Request B → Process 2 → acquires lock ✅
+```
+
+We're back to the original race condition.
+
+You could move the lock into Redis so every process shares it.
+
+But now you've introduced:
+
+- another network round trip
+- lock expiration
+- failure handling
+- lock ownership
+- distributed coordination
+- another dependency
+
+**You started with a simple counter and ended up designing a distributed locking system.**
+
+That felt like solving the wrong problem.
+
+## The Fix: Let MongoDB Do the Increment
+
+Then I looked at what MongoDB already provides.
+
+MongoDB has update operators specifically designed for this kind of operation.
+
+Instead of:
+
+```javascript
+const doc = await ShortUrl.findOne({
+  short: shortCode
+});
+
+doc.clicks = doc.clicks + 1;
+
+await doc.save();
+```
+
+I could simply tell MongoDB:
+
+```javascript
+await ShortUrl.findOneAndUpdate(
+  { short: shortCode },
+  { $inc: { clicks: 1 } }
+);
+```
+
+That's a tiny change in code.
+
+**But conceptually, it's a huge change.**
+
+## What $inc Actually Changes
+
+The old approach says:
+
+`"Give me the value. I'll calculate the new value and send it back."`
+
+The `$inc` approach says:
+
+`"Increment this value for me."`
+
+The difference is where the operation happens.
+
+**Before**
+```
+Application
+
+Read 10
+   ↓
+Calculate 10 + 1
+   ↓
+Write 11
+```
+
+There is a gap between the read and the write.
+
+**After**
+```
+Application
+     │
+     │ $inc: clicks by 1
+     ▼
+  MongoDB
+     │
+     ▼
+  Atomic update
+```
+
+MongoDB performs the increment as part of the database update operation.
+
+Now imagine our two concurrent requests again.
+
+```
+Request A → $inc → 10 → 11
+
+Request B → $inc → 11 → 12
+```
+
+Final value:
+
+`12`
+
+Both increments are applied.
+
+**The race condition caused by the read-modify-write pattern is gone.**
+
+## What Does "Atomic" Mean?
+
+This is where the word atomic becomes important.
+
+**An atomic operation is treated as one indivisible operation.**
+
+You don't expose an intermediate state that another operation can accidentally overwrite.
+
+Our original implementation wasn't atomic:
+
+```
+READ
+  ↓
+modify
+  ↓
+WRITE
+```
+
+There was a gap.
+
+The `$inc` operation moves the increment into the database update itself.
+
+Conceptually:
+
+```
+$inc
+ ↓
+MongoDB updates the value
+ ↓
+Operation completes
+```
+
+**There is no application-level read followed by a separate application-level write. That's the key difference.**
+
+## The Broader Pattern: Read-Modify-Write
+
+The click counter taught me something much bigger than MongoDB.
+
+The pattern was:
+
+```
+Read
+ ↓
+Modify
+ ↓
+Write
+```
+
+And whenever multiple requests can modify the same shared state, that pattern deserves attention.
+
+For example:
+
+| Operation | Risky approach | Database operation |
+| :--- | :--- | :--- |
+| Increment counter | Read → increment → save | `$inc` |
+| Add to array | Read → push → save | `$push` |
+| Remove from array | Read → filter → save | `$pull` |
+| Keep minimum value | Read → compare → save | `$min` |
+
+The lesson isn't:
+
+`"Always use $inc."`
+
+The real lesson is:
+
+> **Look for operations where you're reading shared data, changing it in application memory, and writing it back. Those are places where concurrency can become a problem.**
+
+## Why I Didn't Notice the Bug
+
+This might be the most interesting part of the whole problem.
+
+The bug was there before I knew about it.
+
+But my development environment almost never triggered it.
+
+When I tested manually:
+
+```
+Click
+Wait
+Click
+Wait
+Click
+Wait
+```
+
+everything was sequential.
+
+So the code looked correct.
+
+To expose the problem, I needed concurrent requests.
+
+Something more like:
+
+```
+100 requests
+      ↓
+at approximately the same time
+      ↓
+same document
+      ↓
+same counter
+```
+
+**That's why race conditions are so difficult to find.**
+
+You don't necessarily get:
+
+`500 Internal Server Error`
+
+You might get:
+
+`200 OK`
+
+Everything appears healthy.
+
+**Except your data is quietly becoming wrong.**
+
+## The Question I Ask Now
+
+This bug changed one question I ask when writing database code.
+
+Before, I would ask:
+
+`"Does this work?"`
+
+Now I also ask:
+
+> **"What happens if two requests execute this at exactly the same time?"**
+
+That second question is surprisingly powerful.
+
+For a simple CRUD application, you can easily test:
+
+```
+Create
+Read
+Update
+Delete
+```
+
+But production systems introduce another dimension:
+
+**Concurrency**
+
+**The code that is correct for one request isn't automatically correct for one hundred concurrent requests.**
+
+## The Takeaway
+
+My click counter was only a few lines of code.
+
+It looked simple.
+
+It worked during testing.
+
+And it was wrong.
+
+The fix itself was tiny:
+
+```javascript
+await ShortUrl.findOneAndUpdate(
+  { short: shortCode },
+  { $inc: { clicks: 1 } }
+);
+```
+
+But the important part wasn't learning `$inc`.
+
+**It was understanding why `$inc` was necessary.**
+
+Whenever you see code like this:
+
+```javascript
+const doc = await Model.findOne({ ... });
+
+doc.someCounter = doc.someCounter + 1;
+
+await doc.save();
+```
+
+don't automatically assume it's safe.
+
+Stop and ask:
+
+**Who else could be modifying this value right now?**
+
+If multiple requests or processes can modify it, you've found a potential race condition.
+
+And before reaching for locks, queues, or complicated distributed coordination, ask another question:
+
+**Can the database perform this operation atomically for me?**
+
+Very often, the answer is yes.
+
+And when it is, that's usually where the fix belongs.
+
+## One Small Bug, One Big Lesson
+
+I started this project because I wanted to understand what happens when a simple application faces real traffic.
+
+I expected the difficult parts to be things like caching, queues, workers, and scaling.
+
+I didn't expect a click counter to teach me one of the most important lessons.
+
+> **Concurrency changes what "correct" means.**
+
+**Code can be perfectly correct when one user runs it. And completely wrong when one hundred users run it at the same time.**
+
+That's the difference between writing code that works...
+
+and engineering software that keeps working when reality arrives.
+
+**And sometimes, the first sign that reality has arrived is a number in your database that quietly starts lying to you.**

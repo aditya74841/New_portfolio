@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <!-- Grid Paper Pattern -->
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="sketch-shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Paper Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#grid)" />
+
+  <!-- Outer Hand-drawn Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#2b2d42" stroke-width="3" rx="8" stroke-dasharray="800 5 400 4" />
+
+  <!-- Title Header -->
+  <text x="60" y="80" font-family="'Courier New', Courier, monospace" font-size="34" font-weight="bold" fill="#1d2d44">MongoDB Indexing: B-Tree &amp; IXSCAN Search Path</text>
+  <line x1="60" y1="95" x2="1140" y2="95" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="100" x2="850" y2="100" stroke="#8d99ae" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- COLLSCAN vs IXSCAN Box (Left) -->
+  <g filter="url(#sketch-shadow)">
+    <rect x="60" y="130" width="340" height="480" fill="#fffef9" stroke="#2b2d42" stroke-width="3" rx="6" />
+    <text x="80" y="170" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="bold" fill="#d90429">1. Query Execution Comparison</text>
+    
+    <!-- COLLSCAN Card -->
+    <rect x="80" y="195" width="300" height="180" fill="#ffe5ec" stroke="#d90429" stroke-width="2.5" rx="4" />
+    <text x="95" y="225" font-family="'Courier New', Courier, monospace" font-size="18" font-weight="bold" fill="#900c3f">[ COLLSCAN ] Collection Scan</text>
+    <text x="95" y="255" font-family="sans-serif" font-size="14" fill="#2b2d42">• Checks every doc 1-by-1</text>
+    <text x="95" y="280" font-family="sans-serif" font-size="14" fill="#2b2d42">• 1,000,000 docs = 1,000,000 reads</text>
+    <text x="95" y="305" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#d90429">Time Complexity: O(N)</text>
+    <text x="95" y="330" font-family="sans-serif" font-size="13" font-style="italic" fill="#555">"Like reading page 1 to 700"</text>
+
+    <!-- IXSCAN Card -->
+    <rect x="80" y="400" width="300" height="180" fill="#e8f5e9" stroke="#2b9348" stroke-width="2.5" rx="4" />
+    <text x="95" y="430" font-family="'Courier New', Courier, monospace" font-size="18" font-weight="bold" fill="#1b4332">[ IXSCAN ] Index Scan</text>
+    <text x="95" y="460" font-family="sans-serif" font-size="14" fill="#2b2d42">• Traverses B-Tree index</text>
+    <text x="95" y="485" font-family="sans-serif" font-size="14" fill="#2b2d42">• 1,000,000 docs = ~20 comparisons</text>
+    <text x="95" y="510" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#2b9348">Time Complexity: O(log N)</text>
+    <text x="95" y="535" font-family="sans-serif" font-size="13" font-style="italic" fill="#555">"Direct jump using Back-Index"</text>
+  </g>
+
+  <!-- B-TREE DIAGRAM (Right) -->
+  <g filter="url(#sketch-shadow)">
+    <rect x="430" y="130" width="710" height="480" fill="#fffef9" stroke="#2b2d42" stroke-width="3" rx="6" />
+    <text x="460" y="170" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="bold" fill="#1d2d44">2. B-Tree Data Structure (Target: "email")</text>
+
+    <!-- Connectors / Branches -->
+    <path d="M 785 240 L 615 310" stroke="#8d99ae" stroke-width="3" stroke-dasharray="4 4" />
+    <path d="M 785 240 L 955 310" stroke="#0077b6" stroke-width="4" /> <!-- Active Path -->
+
+    <path d="M 955 370 L 870 450" stroke="#0077b6" stroke-width="4" /> <!-- Active Path -->
+    <path d="M 955 370 L 1040 450" stroke="#8d99ae" stroke-width="3" stroke-dasharray="4 4" />
+
+    <!-- Root Node -->
+    <rect x="700" y="200" width="170" height="50" fill="#edf2f4" stroke="#2b2d42" stroke-width="3" rx="6" />
+    <text x="720" y="232" font-family="'Courier New', Courier, monospace" font-size="17" font-weight="bold" fill="#1d2d44">Root [ M ]</text>
+
+    <!-- Level 1 Left -->
+    <rect x="530" y="310" width="170" height="50" fill="#edf2f4" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="550" y="342" font-family="'Courier New', Courier, monospace" font-size="16" fill="#2b2d42">Keys: [ A - L ]</text>
+
+    <!-- Level 1 Right (Active) -->
+    <rect x="870" y="310" width="170" height="50" fill="#caf0f8" stroke="#0077b6" stroke-width="3.5" rx="6" />
+    <text x="890" y="342" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#03045e">Keys: [ N - Z ]</text>
+
+    <!-- Leaf Nodes Level 2 -->
+    <rect x="450" y="450" width="160" height="60" fill="#f8f9fa" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="465" y="478" font-family="'Courier New', Courier, monospace" font-size="14" fill="#495057">Leaf: "aditya"</text>
+    <text x="465" y="498" font-family="sans-serif" font-size="12" fill="#6c757d">Ptr → Doc #402</text>
+
+    <rect x="630" y="450" width="160" height="60" fill="#f8f9fa" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="645" y="478" font-family="'Courier New', Courier, monospace" font-size="14" fill="#495057">Leaf: "john"</text>
+    <text x="645" y="498" font-family="sans-serif" font-size="12" fill="#6c757d">Ptr → Doc #891</text>
+
+    <!-- Target Hit Leaf Node -->
+    <rect x="810" y="450" width="170" height="60" fill="#d8f3dc" stroke="#2b9348" stroke-width="3" rx="4" />
+    <text x="825" y="478" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#1b4332">Leaf: "rachel"</text>
+    <text x="825" y="498" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="bold" fill="#2b9348">✓ Match! Doc #700</text>
+
+    <rect x="1000" y="450" width="120" height="60" fill="#f8f9fa" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="1010" y="478" font-family="'Courier New', Courier, monospace" font-size="14" fill="#495057">Leaf: "zack"</text>
+    <text x="1010" y="498" font-family="sans-serif" font-size="12" fill="#6c757d">Ptr → Doc #999</text>
+
+    <!-- Key Takeaway Annotations -->
+    <path d="M 970 540 L 970 570 L 460 570" fill="none" stroke="#2b2d42" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)" />
+    <text x="460" y="595" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1d2d44">explain("executionStats") → stage: "IXSCAN", nReturned: 1, totalDocsExamined: 1</text>
+  </g>
+</svg>

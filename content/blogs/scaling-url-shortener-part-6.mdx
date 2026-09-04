@@ -1,0 +1,747 @@
+---
+title: "Your Logs Are Slowing Your Server Down"
+date: "2026-09-04"
+excerpt: "I optimized my database. I switched frameworks. I still wasn't fast enough. Then I looked at my logs."
+tags: ["Tech", "Performance", "Observability", "Node.js", "Fastify", "Logging"]
+coverImage: "/blogs/logging-performance-bottleneck-sketch.svg"
+language: "en"
+translationKey: "scaling-url-shortener-part-6"
+series:
+  id: "url-shortener"
+  title: "URL Shortener Series: Scaling from CRUD to Production"
+  order: 6
+featured: false
+published: true
+---
+
+Your Logs Are Slowing Your Server Down
+
+**I optimized my database. I switched frameworks. I still wasn't fast enough. Then I looked at my logs.**
+
+URL Shortener Series · Blog 6
+
+I had already spent a lot of time making my URL shortener faster.
+
+I had migrated from Express to Fastify.
+
+I had moved Redis closer to the application.
+
+I had added database indexes.
+
+I had moved analytics out of the critical request path.
+
+I had benchmarked the application with AutoCannon.
+
+The numbers were improving.
+
+But something still bothered me.
+
+I wanted to know what was happening inside the server while it was handling thousands of requests.
+
+So I looked at the profiling data.
+
+And there it was.
+
+Not MongoDB.
+
+Not Redis.
+
+Not the URL lookup.
+
+**Logging.**
+
+**My own observability code was consuming CPU and I/O that could otherwise be used to process requests.**
+
+That was a slightly uncomfortable realization.
+
+Because logging is something I had always treated as harmless.
+
+I was wrong.
+
+## The Part Nobody Talks About
+
+When developers think about performance bottlenecks, they usually think about:
+
+- slow database queries
+- inefficient algorithms
+- network latency
+- excessive API calls
+- memory usage
+- poor database indexes
+
+Very few people start with:
+
+`logger.info()`
+
+**But logging isn't free.**
+
+Every log entry has work associated with it.
+
+Depending on the logger and configuration, that can include:
+
+```
+Create log data
+      ↓
+Serialize structured data
+      ↓
+Format output
+      ↓
+Write to a stream
+      ↓
+Log collector / terminal / file
+```
+
+One log message might be insignificant.
+
+But imagine processing thousands of requests every second.
+
+Suppose your server handles:
+
+`6,000 requests/sec`
+
+and each request generates two log entries.
+
+That's potentially:
+
+`6,000 × 2 = 12,000 log events/sec`
+
+Now the "tiny" cost of logging isn't so tiny anymore.
+
+This is one of those problems that only becomes obvious when you put the application under load.
+
+## My URL Shortener Was Logging Every Request
+
+I was using Pino, a high-performance structured logger for Node.js.
+
+Pino is designed to be fast.
+
+That's important.
+
+The lesson here isn't:
+
+`"Pino is slow."`
+
+It isn't.
+
+The lesson is:
+
+> **Even a fast logger still does work. The problem isn't that one log line is expensive. The problem is volume.**
+
+Fastify's request logging can produce structured information for incoming requests and completed responses.
+
+A request might generate something conceptually similar to:
+
+```json
+{
+  "level": 30,
+  "time": 1724900000000,
+  "reqId": "req-3ff22038",
+  "req": {
+    "method": "GET",
+    "url": "/uaW8FMy"
+  },
+  "msg": "incoming request"
+}
+```
+
+And the response can generate another event:
+
+```json
+{
+  "level": 30,
+  "time": 1724900000001,
+  "reqId": "req-3ff22038",
+  "res": {
+    "statusCode": 302
+  },
+  "responseTime": 0.89,
+  "msg": "request completed"
+}
+```
+
+Now multiply that by thousands of requests.
+
+The problem isn't that one log line is expensive.
+
+The problem is volume.
+
+## The Math Changes at High Throughput
+
+Consider this simplified example:
+
+```
+6,000 requests/sec
+× 2 log entries/request
+= 12,000 log entries/sec
+```
+
+Every one of those entries can involve some combination of:
+
+- Object handling
+- JSON serialization
+- String formatting
+- Stream writes
+- I/O
+- Log collection
+
+The exact cost depends on the logger, configuration, destination, message size, and environment.
+
+But the principle is simple:
+
+> **High-volume logging creates high-volume work. And if that work happens on the same machine that's trying to serve your requests, it competes for resources.**
+
+## I Didn't Notice It at Low Traffic
+
+This is what makes performance problems like this deceptive.
+
+When I was developing the application manually, I wasn't sending thousands of requests per second.
+
+I was doing this:
+
+```
+Open browser
+   ↓
+Create short URL
+   ↓
+Click link
+   ↓
+Check result
+```
+
+Maybe one request every few seconds.
+
+At that scale:
+
+`logger.info(...)`
+
+felt free.
+
+Then AutoCannon came along.
+
+`autocannon -c 100 -d 30 http://localhost:5000/uaW8FMy`
+
+Now the server wasn't handling one request.
+
+It was handling a large number of concurrent requests continuously.
+
+The workload changed.
+
+And suddenly the things that looked insignificant became measurable.
+
+That's an important lesson about performance testing:
+
+> **Some bottlenecks don't exist at development traffic levels. They emerge only when you increase the workload.**
+
+## The Fix Was Surprisingly Small
+
+I didn't rewrite my logging system.
+
+I didn't remove logging.
+
+I simply changed the log level used during the benchmark:
+
+`LOG_LEVEL=warn`
+
+That's it.
+
+Why does this help?
+
+Because loggers use severity levels.
+
+A simplified hierarchy looks like:
+
+```
+debug
+info
+warn
+error
+```
+
+If the logger is configured to accept only: `warn`, then an `info` message doesn't need to be emitted.
+
+Conceptually:
+
+```
+logger.info("request completed")
+             │
+             ▼
+       Level check
+             │
+       info < warn
+             │
+             ▼
+           skip
+```
+
+Instead of:
+
+```
+logger.info(...)
+      ↓
+serialize
+      ↓
+format
+      ↓
+write
+```
+
+the message can be discarded at the level check.
+
+That means we aren't merely saving the final write.
+
+We're avoiding unnecessary work associated with logs that don't need to exist at that verbosity.
+
+## Before and After
+
+This was the relevant part of my benchmark progression:
+
+**Fastify + Local Redis + info logging**
+
+`≈ 5,200 req/sec`
+
+Then:
+
+**Fastify + Local Redis + warn logging**
+
+`6,809 req/sec`
+
+The exact result depends on the benchmark environment, workload, machine, and configuration.
+
+So I wouldn't present: `LOG_LEVEL=warn` as some universal "you will gain 1,600 requests/sec" optimization.
+
+That's not how benchmarking works.
+
+But in my test, reducing logging produced a measurable improvement.
+
+And that was the important discovery.
+
+I had changed almost nothing about the application logic.
+
+I had simply stopped generating logs that weren't useful for that particular workload.
+
+## The Deeper Problem: Observability Has a Cost
+
+This is the part I found most interesting.
+
+We add observability because we want to understand our systems.
+
+We add:
+
+- logs
+- metrics
+- traces
+- request IDs
+- health checks
+- profiling
+- monitoring
+
+These tools are extremely valuable.
+
+But they aren't magical.
+
+They consume resources.
+
+```
+Application
+    │
+    ├── Business logic
+    ├── Database queries
+    ├── Network requests
+    │
+    └── Observability
+           ├── Logs
+           ├── Metrics
+           └── Traces
+```
+
+All of those things compete for some combination of:
+
+- CPU
+- Memory
+- Network
+- Disk / I/O
+
+Good observability tools try very hard to minimize their overhead.
+
+But **zero overhead doesn't exist.**
+
+The question is whether the visibility you gain is worth the resources you're spending.
+
+## This Doesn't Mean "Disable Logging"
+
+This is where I think performance discussions often become misleading.
+
+Someone discovers that logging costs CPU and concludes:
+
+`"Logging is bad. Turn it off."`
+
+That's not the lesson.
+
+Imagine a production server fails at 3 AM.
+
+You investigate and discover: **No logs.**
+
+Good luck.
+
+Logging is essential.
+
+The real lesson is:
+
+> **Use the right amount of logging for the environment and workload.**
+
+During development, I might want: `DEBUG` because I'm actively trying to understand what the application is doing.
+
+During staging: `INFO` might provide useful request-level visibility.
+
+In a high-throughput production service: `WARN` and `ERROR` may be more appropriate for the default log level, while important business events can still be logged explicitly.
+
+There isn't one perfect level for every system.
+
+## My Mental Model Changed
+
+Before this experiment, I thought about logging like this:
+
+```
+Application
+   ↓
+Do work
+   ↓
+Log what happened
+```
+
+Now I think about it as:
+
+```
+Application
+   │
+   ├── Do useful work
+   │
+   └── Spend resources describing that work
+```
+
+That second part isn't necessarily bad.
+
+But it should be intentional.
+
+Every log line should answer a question.
+
+For example:
+
+- *"Why did this request fail?"*
+- *"Why did the cache miss?"*
+- *"Why did this worker retry?"*
+- *"Why did this payment fail?"*
+
+Those are useful.
+
+But:
+
+```
+"Request received"
+"Request completed"
+"Request received"
+"Request completed"
+```
+
+repeated thousands of times per second may not be useful in every environment.
+
+Especially when the requests are all succeeding.
+
+## The Hot Path Matters
+
+The problem becomes even more important when logging happens inside a **hot path**.
+
+A hot path is code that executes very frequently.
+
+For my URL shortener: `GET /:shortCode` is a hot path.
+
+Every click goes through it.
+
+So something like:
+
+```javascript
+logger.info(
+  {
+    shortCode,
+    userAgent: req.headers["user-agent"]
+  },
+  "redirect request"
+);
+```
+
+might execute thousands of times per second.
+
+Now compare that with:
+
+```javascript
+logger.error(
+  { err, shortCode },
+  "redirect failed"
+);
+```
+
+The second event may happen once in a thousand requests.
+
+Those two logs have very different operational value.
+
+This doesn't mean the first one is always wrong.
+
+It means I now ask:
+
+`Does this log need to exist on every request?`
+
+## Be Careful With Expensive Log Construction
+
+There is another subtle problem.
+
+Sometimes the expensive part isn't the logger itself.
+
+It's the data you're constructing for the logger.
+
+For example:
+
+```javascript
+logger.debug({
+  requestContext: buildLargeRequestContext(req)
+});
+```
+
+If `buildLargeRequestContext()` is expensive, you may pay that cost even when debug logging is disabled, depending on how the code is structured.
+
+Conceptually:
+
+```
+Build expensive object
+        ↓
+Pass it to logger
+        ↓
+Logger checks level
+        ↓
+"Oh, debug is disabled."
+```
+
+You've already paid the cost.
+
+For expensive diagnostic information, the construction itself should be conditional when your logging framework/API doesn't already provide lazy evaluation:
+
+```javascript
+if (logger.isLevelEnabled("debug")) {
+  const context = buildLargeRequestContext(req);
+
+  logger.debug(
+    { context },
+    "detailed request information"
+  );
+}
+```
+
+The principle is:
+
+> **Don't spend resources constructing information that you already know you won't emit.**
+
+## What About console.log()?
+
+There's another common mistake:
+
+`"I'll just replace the logger with console.log()."`
+
+That doesn't automatically solve anything.
+
+`console.log()` is still output.
+
+And its behavior and performance characteristics depend on the environment and where stdout is connected.
+
+The broader point is:
+
+- `console.log()`
+- `logger.info()`
+- `logger.debug()`
+
+are not magically free.
+
+If you're writing thousands of messages, you're doing thousands of logging operations.
+
+A production logger such as Pino gives you much better control and structured output than scattering `console.log()` throughout an application.
+
+So the solution isn't: `"Never log."`
+
+It's: **Use an appropriate logging system and control the amount of work it performs.**
+
+## Logging During Benchmarks Is Especially Interesting
+
+There's another reason I changed the logging level while benchmarking.
+
+A benchmark is supposed to tell me how the application performs under a particular workload.
+
+But if my benchmark produces enormous amounts of log output, I'm also benchmarking:
+
+```
+Application
++
+Logger
++
+Output pipeline
+```
+
+That might be exactly what I want if I'm testing the entire production configuration.
+
+But if I'm trying to measure:
+
+`"How many redirects can this application process?"`
+
+then excessive request logging can distort the result.
+
+That's why I now treat benchmark configuration as something that needs to be explicit.
+
+For example:
+
+```
+Benchmark
+├── Same application
+├── Same database
+├── Same cache
+├── Same concurrency
+├── Controlled logging
+└── Repeatable workload
+```
+
+Otherwise, changing the logging configuration between tests can affect the numbers just as changing the database or application code can.
+
+## Performance Optimization Is a Measurement Problem
+
+This is probably the biggest lesson from the entire URL shortener project.
+
+At different stages, I found different bottlenecks.
+
+1. First: **Database access**
+2. Then: **Network latency to Redis**
+3. Then: **Application/framework overhead**
+4. And eventually: **Logging overhead**
+
+If I had guessed instead of measured, I could easily have spent days optimizing the wrong thing.
+
+That's why I like this progression:
+
+```
+Measure
+   ↓
+Find bottleneck
+   ↓
+Change one thing
+   ↓
+Measure again
+   ↓
+Compare
+```
+
+Not:
+
+```
+Guess
+   ↓
+Rewrite everything
+   ↓
+Hope
+```
+
+The benchmark doesn't care what I think is slow.
+
+It tells me what is actually happening.
+
+## The Optimization Hierarchy I Started Seeing
+
+My URL shortener taught me to think about performance in layers:
+
+```
+                Request
+                    │
+                    ▼
+             ┌─────────────┐
+             │ Application │
+             └─────────────┘
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+      Redis      MongoDB      Logging
+        │           │           │
+     Network      Query         I/O
+        │           │           │
+        ▼           ▼           ▼
+     Latency      CPU          CPU/I/O
+```
+
+Optimizing one layer doesn't guarantee that another layer isn't the bottleneck.
+
+That's why the process never really ends.
+
+You fix one bottleneck.
+
+The next one becomes visible.
+
+Then you measure again.
+
+## What I Do Differently Now
+
+After this experiment, I don't treat logging as an afterthought anymore.
+
+When I put something on a hot path, I ask:
+
+- **Does this need to run on every request?** (If not, reduce its frequency.)
+- **Is the log useful?** (If nobody will act on it, maybe it shouldn't exist.)
+- **Is constructing the log data expensive?** (If yes, avoid constructing it when the level is disabled.)
+- **What log level does this belong to?** (Debug information shouldn't necessarily be production default output.)
+- **What happens under 10× the current traffic?** (A tiny cost multiplied by millions of events becomes a different problem.)
+
+These questions take seconds.
+
+But they can prevent unnecessary work at scale.
+
+## The Takeaway
+
+I started this project thinking performance was mostly about the obvious things:
+
+- Database
+- Network
+- Framework
+
+Then I discovered something less obvious.
+
+My own logging was consuming resources.
+
+Not because the logger was badly designed.
+
+Not because logging is inherently bad.
+
+But because I was asking the application to produce a large amount of information while simultaneously asking it to process as many requests as possible.
+
+The final lesson wasn't:
+
+`"Turn off your logs."`
+
+It was:
+
+> **Don't assume your observability layer is free. At low traffic, almost anything can look cheap. At high traffic, multiplication changes the equation.**
+
+One log message isn't expensive.
+
+Thousands per second are a workload.
+
+And sometimes the easiest performance optimization isn't changing your database, rewriting your application, or changing your architecture.
+
+Sometimes it's simply asking:
+
+`"Do I really need to log this on every request?"`
+
+For my benchmark, the answer was no.
+
+`LOG_LEVEL=warn`
+
+One configuration change.
+
+A measurable improvement.
+
+And another reminder that when you're optimizing a system, the things you added to help you understand the system are part of the system too.
+
+This post is part of a series on rebuilding a URL shortener from a basic CRUD application into a production-oriented system. The full progression — from 345 to 6,809 requests per second — is documented in the main project write-up.
+
+**Thanks for reading! Subscribe for free to receive new posts and support my work.**

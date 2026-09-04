@@ -1,0 +1,943 @@
+---
+title: "MongoDB Indexing — How MongoDB Finds Your Data Faster"
+date: "2026-09-04"
+excerpt: "A deep dive into MongoDB indexing: COLLSCAN vs IXSCAN, B-Trees, Selectivity, Compound Indexes, and verifying queries with explain()."
+tags: ["Tech", "MongoDB", "Database", "System Design", "Performance"]
+coverImage: "/blogs/mongodb-indexing-sketch.svg"
+language: "en"
+translationKey: "scaling-url-shortener-part-2"
+series:
+  id: "url-shortener"
+  title: "URL Shortener Series: Scaling from CRUD to Production"
+  order: 2
+featured: false
+published: true
+---
+
+MongoDB Indexing — How MongoDB Finds Your Data Faster
+
+I recently started learning about MongoDB indexes, and at first, indexing sounded like one of those database concepts that everyone expects you to already know.
+
+But when I tried to understand what actually happens when MongoDB searches for a document, the concept became much more interesting.
+
+Thanks for reading! Subscribe for free to receive new posts and support my work.
+
+So let’s understand MongoDB indexing from the beginning.
+
+No complicated definition first.
+
+Let’s start with a book.
+
+## Imagine You Have a Book With 1,000 Pages
+
+Suppose I give you a book with 1,000 pages.
+
+And I ask you:
+
+**Find the word mongodb.**
+
+You open the book.
+
+You don’t know where the word is.
+
+So you start checking:
+
+```
+Page 1
+Page 2
+Page 3
+Page 4
+...
+```
+
+Maybe the word is on page 700.
+
+That means you may have to go through a huge portion of the book before finding it.
+
+Now imagine that 1,000 users are asking the same question.
+
+Every time, you potentially have to search through the book again.
+
+**That is obviously not efficient.**
+
+And this is where the idea of an index comes in.
+
+## So What Is an Index?
+
+Think about the index at the back of a book.
+
+You want to find a topic.
+
+Instead of reading every page, you go to the index.
+
+The index tells you something like:
+
+```
+MongoDB ........ 700
+Node.js ........ 420
+React .......... 250
+```
+
+Now you know:
+
+**MongoDB → Page 700**
+
+You don’t need to read pages 1 through 699.
+
+You can go directly toward the relevant location.
+
+This is the basic idea behind a database index.
+
+**An index is an additional data structure that MongoDB maintains to make certain queries more efficient.**
+
+## What Happens Without an Index?
+
+Suppose we have a MongoDB collection called:
+
+`users`
+
+And our documents look like:
+
+```json
+{
+  "name": "Aditya",
+  "email": "aditya@example.com"
+}
+```
+
+Now suppose we run:
+
+```javascript
+db.users.find({
+  email: "aditya@example.com",
+});
+```
+
+If MongoDB doesn’t have a suitable index for this query, it may need to examine documents in the collection to find the matching one.
+
+This is called a:
+
+**COLLSCAN**
+
+or Collection Scan.
+
+## What Is Collection Scanning?
+
+The name actually gives us a clue.
+
+**Collection Scan = scanning the collection.**
+
+Imagine our book again.
+
+You are looking for:
+
+`mongodb`
+
+and there is no index.
+
+So you start checking the pages:
+
+```
+Page 1
+Page 2
+Page 3
+Page 4
+...
+```
+
+In MongoDB terms, the database is examining documents from the collection to find the documents that satisfy the query.
+
+That’s a collection scan.
+
+MongoDB represents this operation as:
+
+**COLLSCAN**
+
+## The Problem With Collection Scans
+
+Imagine this collection contains:
+
+**1,000 documents**
+
+A collection scan may need to examine many of those documents.
+
+Now imagine:
+
+**1,000,000 documents**
+
+The amount of work can become much larger.
+
+This is why indexes become important when working with large collections and frequently executed queries.
+
+## Now Let’s Add an Index
+
+Suppose our application frequently searches users by:
+
+`email`
+
+We can create an index:
+
+```javascript
+db.users.createIndex({
+  email: 1,
+});
+```
+
+Now MongoDB has an additional structure that helps it locate documents based on email.
+
+So instead of thinking:
+
+```
+Query
+  ↓
+Check documents one by one
+  ↓
+Find matching document
+```
+
+we can think:
+
+```
+Query
+  ↓
+Index
+  ↓
+Find matching entry
+  ↓
+Document
+```
+
+This can dramatically reduce the amount of data MongoDB needs to examine.
+
+## Index Scan — IXSCAN
+
+When MongoDB uses an index to execute a query, you may see:
+
+**IXSCAN**
+
+in the query execution plan.
+
+**IXSCAN means Index Scan.**
+
+Let’s use our book analogy again.
+
+Without an index:
+
+```
+Book
+ ↓
+Page 1
+ ↓
+Page 2
+ ↓
+Page 3
+ ↓
+...
+ ↓
+Page 700
+```
+
+With an index:
+
+```
+Index
+  ↓
+Find where the value belongs
+  ↓
+Locate matching entry
+  ↓
+Fetch document
+```
+
+The important distinction is:
+
+- **COLLSCAN → scan collection**
+- **IXSCAN → scan index**
+
+This is one of the first things you should look for when learning how MongoDB executes a query.
+
+## But How Does an Index Actually Work?
+
+This is where things become interesting.
+
+If an index simply stored values randomly, it wouldn’t help us much.
+
+So databases use data structures designed to make searching efficient.
+
+One important concept here is the B-tree family of structures.
+
+You can understand the basic idea using a tree.
+
+Imagine:
+
+```
+             50
+           /    \
+         25      75
+        /  \    /  \
+      10   40  60   90
+```
+
+Suppose we want to find:
+
+`60`
+
+Do we need to check:
+
+```
+10
+25
+40
+50
+60
+```
+
+one by one?
+
+No.
+
+We can navigate the tree.
+
+First:
+
+`60 > 50`
+
+So we move to the right.
+
+Now:
+
+`60 < 75`
+
+So we move to the left.
+
+And we find:
+
+`60`
+
+The important idea is not the exact tree shown above.
+
+The important idea is:
+
+> **The structure allows the database to eliminate large portions of the search space instead of checking everything.**
+
+That’s why indexes can make searching much faster.
+
+## Why Not Just Use an Array?
+
+Good question.
+
+Suppose we have an unsorted array:
+
+```javascript
+[10, 50, 25, 90, 40, 60, 75];
+```
+
+If you’re looking for:
+
+`60`
+
+you may have to check many elements.
+
+That’s roughly:
+
+**O(n)**
+
+in the worst case.
+
+A properly structured search tree can reduce the amount of searching substantially, conceptually giving us:
+
+**O(log n)**
+
+search behavior.
+
+But remember:
+
+> **Database performance is more complicated than just Big-O.**
+
+MongoDB also has to deal with memory, disk I/O, caching, index size, query shape, selectivity, and many other factors.
+
+So don’t think:
+
+`Index = always O(log n) = always fast`
+
+Think:
+
+```
+Index
+  ↓
+reduces the amount of data MongoDB
+needs to examine
+  ↓
+can make queries much more efficient
+```
+
+## Unique Index
+
+Now let’s talk about another important concept:
+
+**Unique Index.**
+
+A unique index is an index that also enforces uniqueness.
+
+For example, suppose every user should have a unique email.
+
+We can create:
+
+```javascript
+db.users.createIndex({ email: 1 }, { unique: true });
+```
+
+Now MongoDB will not allow two documents with the same indexed email value.
+
+For example:
+
+`aditya@example.com`
+
+can exist once, but another document cannot use the same value.
+
+So a unique index gives us two important benefits:
+
+1. **Query performance:** The index can help MongoDB efficiently find documents using that field.
+2. **Data integrity:** MongoDB can enforce the rule: **email must be unique.**
+
+This is why unique indexes are useful for fields such as usernames, emails, or other identifiers where duplicates should not be allowed.
+
+## Selectivity — An Important Indexing Concept
+
+Now we reach a concept that is easy to ignore but very important:
+
+**Selectivity.**
+
+Selectivity describes how well a field can distinguish one document from other documents.
+
+Let’s imagine:
+
+**1,000,000 users**
+
+And we create an index on:
+
+`gender`
+
+Suppose we have:
+
+- `500,000 → male`
+- `500,000 → female`
+
+Now we search:
+
+```json
+{
+  "gender": "male"
+}
+```
+
+The query still matches around **500,000 documents.**
+
+So although an index exists, the value doesn’t narrow down the result very much.
+
+That’s **low selectivity.**
+
+Now imagine:
+
+`userId`
+
+with values like:
+
+```
+10001
+10002
+10003
+10004
+...
+```
+
+If we search:
+
+```json
+{
+  "userId": 100023
+}
+```
+
+and that value identifies one user, the field is **highly selective.**
+
+So:
+
+```
+High selectivity
+        ↓
+fewer documents match
+        ↓
+index can be more useful
+```
+
+And:
+
+```
+Low selectivity
+        ↓
+many documents match
+        ↓
+index may provide less benefit
+```
+
+This is why simply saying:
+
+> **“I created an index, so my query will be fast.”**
+
+is not enough.
+
+You also need to think about what you’re indexing and what your queries actually look like.
+
+## Low vs High Selectivity
+
+Let’s compare a few examples.
+
+A field like:
+
+`country`
+
+might contain:
+
+```
+India
+India
+USA
+India
+USA
+India
+...
+```
+
+Millions of documents may share the same value.
+
+That’s relatively **low selectivity.**
+
+But something like:
+
+`shortCode`
+
+might contain:
+
+```
+a8F3k
+x9L2m
+p7Q1z
+...
+```
+
+where each value is unique.
+
+That’s **highly selective.**
+
+The general intuition is:
+
+```
+High selectivity
+       ↓
+few matching documents
+       ↓
+index becomes more useful
+```
+
+## Compound Indexes
+
+So far we’ve created an index on one field:
+
+```javascript
+{
+  email: 1;
+}
+```
+
+But what if our queries frequently involve multiple fields?
+
+For example, imagine an e-commerce application.
+
+We frequently query products using:
+
+```javascript
+{
+  category: "laptop",
+  price: 50000
+}
+```
+
+We might create:
+
+```javascript
+db.products.createIndex({
+  category: 1,
+  price: 1,
+});
+```
+
+This is called a:
+
+**Compound Index.**
+
+It is an index containing multiple fields.
+
+Conceptually:
+
+```
+category
+   ↓
+price
+```
+
+But there is an important lesson here:
+
+> **Don’t create compound indexes just because your documents have multiple fields. Create them based on your actual query patterns.**
+
+## Index Order Matters
+
+This is where compound indexes become more interesting.
+
+Suppose we have:
+
+```javascript
+{
+  userId: 1,
+  createdAt: -1
+}
+```
+
+**The order matters.**
+
+MongoDB organizes the compound index according to this field ordering.
+
+So:
+
+```
+userId
+   ↓
+createdAt
+```
+
+is not exactly the same as:
+
+```javascript
+{
+  createdAt: -1,
+  userId: 1
+}
+```
+
+The best index depends on how your application actually queries the data.
+
+This is why you shouldn’t randomly create indexes.
+
+You need to understand your query patterns first.
+
+## What About Our URL Shortener?
+
+Suppose we have a URL shortener.
+
+Our document might look like:
+
+```json
+{
+  "short": "abc123",
+  "originalUrl": "https://example.com",
+  "createdAt": "..."
+}
+```
+
+And our application frequently does:
+
+```javascript
+db.urls.findOne({
+  short: "abc123",
+});
+```
+
+In this case, we don’t necessarily need a compound index containing:
+
+- short
+- originalUrl
+- createdAt
+
+If the query is primarily based on:
+
+`short`
+
+then a simple index on:
+
+```javascript
+{
+  short: 1;
+}
+```
+
+may be appropriate.
+
+This is a good example of why indexes should come from real application queries, not from the number of fields in a document.
+
+## But Indexes Are Not Free
+
+At this point, it might sound like indexes are magic.
+
+They’re not.
+
+**Indexes have a cost.**
+
+Remember:
+
+```
+Database
+│
+├── Documents
+│
+└── Indexes
+```
+
+The index itself consumes:
+
+- **storage**
+- **memory/cache resources**
+- **processing during writes**
+
+When you insert, update, or delete documents, MongoDB may also need to maintain the relevant indexes.
+
+So there is a trade-off:
+
+```
+More indexes
+     ↓
+potentially faster reads
+     ↓
+but
+     ↓
+more storage
+     ↓
+more index maintenance during writes
+```
+
+That’s why creating an index for every field is usually a bad idea.
+
+You should create indexes that support the queries your application actually needs.
+
+## How Do We Know MongoDB Used the Index?
+
+Now comes one of my favorite parts.
+
+You shouldn’t just say:
+
+> **“I created an index, so MongoDB must be using it.”**
+
+You can actually check.
+
+MongoDB provides:
+
+`explain()`
+
+For example:
+
+```javascript
+db.users
+  .find({
+    email: "aditya@example.com",
+  })
+  .explain("executionStats");
+```
+
+MongoDB can then show us information about how it executed the query.
+
+You may see stages such as:
+
+**COLLSCAN**
+
+or:
+
+**IXSCAN**
+
+And this is extremely useful.
+
+Instead of guessing:
+
+**"I think my index is working."**
+
+you can investigate:
+
+**What did MongoDB actually do?**
+
+## COLLSCAN vs IXSCAN
+
+At this point, the whole concept can be summarized like this:
+
+Without a suitable index:
+
+```
+Query
+  ↓
+Collection
+  ↓
+COLLSCAN
+  ↓
+Examine documents
+  ↓
+Find matching document
+```
+
+With a suitable index:
+
+```
+Query
+  ↓
+Index
+  ↓
+IXSCAN
+  ↓
+Locate matching index entries
+  ↓
+Fetch document
+```
+
+That is the basic mental model I would keep in my head.
+
+## The Experiment You Should Actually Try
+
+If you’re learning MongoDB indexing, don’t just read about it.
+
+**Try it.**
+
+Create a collection with a large number of documents.
+
+Then run a query without an index:
+
+```javascript
+db.users
+  .find({
+    email: "aditya@example.com",
+  })
+  .explain("executionStats");
+```
+
+Look at the execution plan.
+
+Then create the index:
+
+```javascript
+db.users.createIndex({
+  email: 1,
+});
+```
+
+Run the same query again:
+
+```javascript
+db.users
+  .find({
+    email: "aditya@example.com",
+  })
+  .explain("executionStats");
+```
+
+Now compare what MongoDB did.
+
+Look for things such as:
+
+**COLLSCAN**
+
+versus:
+
+**IXSCAN**
+
+and compare execution statistics such as how many documents and index keys were examined.
+
+This is where indexing stops being a theoretical concept.
+
+You can actually see MongoDB changing the way it executes your query.
+
+## One Important Thing I Learned
+
+Before learning indexes, I used to think:
+
+> **“An index is just something that makes the database faster.”**
+
+That’s not really enough.
+
+The better mental model is:
+
+> **An index is an additional data structure that MongoDB maintains to make certain query patterns more efficient.**
+
+And that comes with a cost.
+
+You gain:
+
+**Faster reads**
+
+but potentially pay with:
+
+```
+More storage
++
+Index maintenance
++
+More memory usage
+```
+
+So the goal isn’t:
+
+`Create as many indexes as possible`
+
+The goal is:
+
+```
+Understand your queries
+        ↓
+Choose useful indexes
+        ↓
+Measure with explain()
+        ↓
+Keep the indexes that actually help
+```
+
+## My Final Mental Model
+
+If I had to explain MongoDB indexing to someone in one minute, I would say:
+
+Imagine a huge book.
+
+Without an index, you may need to search through the book to find something.
+
+That’s:
+
+**COLLSCAN**
+
+With an index, MongoDB has an additional structure that helps it narrow down where the required data can be found.
+
+That’s:
+
+**IXSCAN**
+
+The underlying index structure is designed to make searching efficient.
+
+Then we have more advanced concepts:
+
+```
+Index
+│
+├── Unique Index
+│
+├── Selectivity
+│
+├── Compound Index
+│      └── Field order matters
+│
+└── Query Analysis
+       └── explain()
+```
+
+And finally, remember the most important rule:
+
+> **Don’t index everything. Index based on how your application actually queries the data.**
+
+That’s the part I think is easiest to forget.
+
+**An index is not just a database feature. It’s a trade-off between read performance, write overhead, memory, and storage.**
+
+And `explain()` is how you verify whether MongoDB is actually making the trade-off worthwhile.
+
+**Thanks for reading! Subscribe for free to receive new posts and support my work.**

@@ -1,0 +1,793 @@
+---
+title: "I Added Redis to Make My App Faster. It Didn't Work — Until I Found the Real Problem"
+date: "2026-09-04"
+excerpt: "Redis was responding in fractions of a millisecond. My API was taking hundreds of milliseconds. The problem wasn't Redis."
+tags: ["Tech", "Redis", "Performance", "System Design", "Node.js", "Fastify"]
+coverImage: "/blogs/redis-network-latency-sketch.svg"
+language: "en"
+translationKey: "scaling-url-shortener-part-4"
+series:
+  id: "url-shortener"
+  title: "URL Shortener Series: Scaling from CRUD to Production"
+  order: 4
+featured: false
+published: true
+---
+
+I Added Redis to Make My App Faster. It Didn't Work — Until I Found the Real Problem
+
+**Redis was responding in fractions of a millisecond. My API was taking hundreds of milliseconds. The problem wasn't Redis.**
+
+URL Shortener Series · Blog 4
+
+I added Redis because I wanted my URL shortener to be faster.
+
+That's what Redis is for, right?
+
+Fast in-memory reads.
+
+Sub-millisecond operations.
+
+A perfect fit for a URL shortener where thousands of requests might ask:
+
+`"What does this short code point to?"`
+
+So I added Redis.
+
+Then I benchmarked the application.
+
+And the result confused me.
+
+```
+Redis operation:    ~0.147 ms
+
+API p99 latency:    169 ms
+```
+
+Something didn't add up.
+
+If Redis was responding in a fraction of a millisecond, where were the other milliseconds coming from?
+
+I initially thought I needed to optimize the Redis code.
+
+I was looking in the wrong place.
+
+**The problem wasn't the service. It was the distance between my application and the service.**
+
+## 1. Why I Added Redis in the First Place
+
+My URL shortener has a very common access pattern.
+
+Someone requests:
+
+`GET /x6t3p6E`
+
+The application needs to find:
+
+`x6t3p6E → https://example.com`
+
+Originally, that meant querying MongoDB.
+
+I had already added an index to make the lookup efficient.
+
+But I wanted the hot path to be even faster.
+
+The architecture became:
+
+```
+User
+  │
+  ▼
+Fastify
+  │
+  ▼
+Redis
+  │
+  ├── Cache hit → return URL
+  │
+  └── Cache miss → MongoDB → Redis → return URL
+```
+
+This is the classic cache-aside pattern.
+
+On a cache hit, the application shouldn't need to query MongoDB at all.
+
+And my local measurements confirmed that Redis itself was extremely fast.
+
+I measured approximately:
+
+```
+MongoDB query:   ~4.289 ms
+Redis cache hit: ~0.147 ms
+```
+
+That's roughly a **29× difference** in the measured operation time.
+
+So I expected the API to become dramatically faster.
+
+It didn't.
+
+## 2. The Benchmark That Didn't Make Sense
+
+I used AutoCannon to put concurrent traffic against the redirect endpoint.
+
+The first baseline was:
+
+`autocannon -c 100 -d 30 http://localhost:5000/uaW8FMy`
+
+That's:
+
+- 100 concurrent connections
+- 30 seconds
+- repeated requests against the redirect endpoint
+
+My first benchmark looked like this:
+
+**Express + Cloud Redis**
+
+```
+Throughput:    345 req/sec
+p99 latency:   228 ms
+```
+
+Then I migrated the API from Express to Fastify.
+
+The result improved:
+
+**Fastify + Cloud Redis**
+
+```
+Throughput:    488 req/sec
+p99 latency:   169 ms
+```
+
+That's a meaningful improvement.
+
+But something still bothered me.
+
+Redis was supposed to be extremely fast.
+
+**Why was the API's p99 latency still 169 ms?**
+
+I started investigating the request instead of guessing.
+
+## 3. Following One Request
+
+I mapped the path of a cache-hit request:
+
+```
+Client
+  │
+  ▼
+Fastify
+  │
+  ▼
+Redis
+  │
+  ▼
+302 Redirect
+```
+
+There isn't much happening here.
+
+For a cache hit, the application basically needs to:
+
+1. Receive the request.
+2. Extract the short code.
+3. Ask Redis for the URL.
+4. Receive the result.
+5. Send a redirect.
+
+So I added timing around the Redis operation.
+
+Something like:
+
+```javascript
+const t0 = Date.now();
+
+const cached = await redis.get(`url:${shortCode}`);
+
+const t1 = Date.now();
+
+logger.info(
+  { redisMs: t1 - t0 },
+  "redis lookup"
+);
+```
+
+Then I ran the application again.
+
+The logs showed:
+
+```json
+{ "redisMs": 78 }
+{ "redisMs": 82 }
+{ "redisMs": 71 }
+{ "redisMs": 85 }
+```
+
+That stopped me.
+
+I wasn't seeing:
+
+`0.147 ms`
+
+I was seeing:
+
+**70–85 ms**
+
+for the Redis call from my application.
+
+But Redis itself was fast.
+
+So what was I measuring?
+
+## 4. Redis Wasn't Slow
+
+This was the moment I had to separate two different things.
+
+There is a difference between:
+
+> **How long Redis takes to process a command**
+
+and:
+
+> **How long my application takes to communicate with Redis and receive the result.**
+
+Those aren't the same measurement.
+
+Think about ordering food.
+
+**The restaurant might prepare your food in two minutes. But if the restaurant is 50 kilometers away, your total delivery time isn't two minutes.**
+
+You have:
+
+```
+Preparation time
+      +
+Travel time
+      +
+Return travel
+```
+
+Redis was the restaurant.
+
+The network was the delivery.
+
+And I had been looking only at the preparation time.
+
+## 5. The Network Was the Bottleneck
+
+My Redis instance was hosted in the cloud.
+
+My application was running somewhere else.
+
+So every Redis command had to cross the network:
+
+```
+Application
+     │
+     │
+     ▼
+  Internet
+     │
+     ▼
+Redis Data Center
+     │
+     │
+     ▼
+  Redis
+     │
+     │
+     ▼
+  Internet
+     │
+     ▼
+Application
+```
+
+The Redis server could process the command extremely quickly.
+
+But my application still had to wait for the request to travel to Redis and for the response to travel back.
+
+That is **network round-trip latency**, commonly called **RTT**.
+
+In my environment, the round trip was roughly:
+
+**~80 ms**
+
+So the mental model I had was:
+
+```
+Application
+     │
+     ▼
+Redis
+  0.147 ms
+     │
+     ▼
+Response
+```
+
+But reality was closer to:
+
+```
+Application
+     │
+     │ ~40 ms
+     ▼
+  Network
+     │
+     ▼
+Redis
+~0.147 ms
+     │
+     │ ~40 ms
+     ▼
+  Network
+     │
+     ▼
+Application
+
+Total ≈ 80 ms
+```
+
+**The Redis command was fast. The round trip wasn't.**
+
+## 6. This Is the Part I Was Getting Wrong
+
+I had looked at a Redis benchmark and thought:
+
+`"Redis can respond in under a millisecond, so my cache lookup should also take under a millisecond."`
+
+That's an incomplete assumption.
+
+A benchmark that measures Redis processing time doesn't automatically measure the latency of my architecture.
+
+My application doesn't live inside Redis.
+
+There is a network between them.
+
+And that network is part of my application's latency.
+
+This changed how I think about performance.
+
+Instead of asking:
+
+`"How fast is Redis?"`
+
+I should have asked:
+
+> **"How fast can my application reach Redis from where the application actually runs?"**
+
+That's a much more useful question.
+
+## 7. The Fix Was Surprisingly Simple
+
+I didn't need a different Redis implementation.
+
+I didn't need a more complicated caching strategy.
+
+**I needed Redis closer to my application.**
+
+For local benchmarking, I switched from the cloud Redis instance to a Redis server running on the same machine.
+
+Before:
+
+`REDIS_URL=redis://your-cloud-redis-host:6379`
+
+After:
+
+`REDIS_URL=redis://127.0.0.1:6379`
+
+Now the request wasn't leaving my machine.
+
+Instead:
+
+```
+Application
+     │
+     ▼
+localhost
+     │
+     ▼
+Redis
+```
+
+The network path became a loopback connection rather than a trip through my ISP and a remote data center.
+
+The Redis lookup dropped from roughly:
+
+`~80 ms`
+
+to:
+
+**< 0.5 ms**
+
+Then I ran the benchmark again.
+
+The result was dramatically different.
+
+## 8. Same Application. Different Redis Location.
+
+Before:
+
+**Fastify + Cloud Redis**
+
+```
+488 req/sec
+169 ms p99
+```
+
+After moving Redis locally:
+
+**Fastify + Local Redis**
+
+```
+6,809 req/sec
+13 ms p99
+```
+
+That number is huge.
+
+But there is an important detail.
+
+The jump to **6,809 req/sec** was not caused by Redis relocation alone.
+
+During the same performance investigation, I also reduced high-volume request logging.
+
+So the honest comparison is:
+
+| Configuration | Throughput | p99 Latency |
+| :--- | :--- | :--- |
+| Express + Cloud Redis | 345 req/sec | 228 ms |
+| Fastify + Cloud Redis | 488 req/sec | 169 ms |
+| Fastify + Local Redis + Reduced Logging | **6,809 req/sec** | **13 ms** |
+
+The final improvement came from multiple changes.
+
+But the biggest discovery for me was the cloud Redis network latency.
+
+And that discovery completely changed the way I debug performance.
+
+## 9. Don't Confuse Latency With Throughput
+
+There's another important distinction here.
+
+You might see:
+
+`6,809 req/sec`
+
+and think:
+
+`"The application now responds in 0.147 ms."`
+
+That's not what the benchmark means.
+
+Throughput and latency are different metrics.
+
+### Throughput
+
+How many requests the system can process per second.
+
+`6,809 req/sec` means the benchmark observed roughly 6,809 requests being handled per second under that test configuration.
+
+### Latency
+
+How long an individual request takes.
+
+I used p99 latency in the benchmark.
+
+A p99 of **13 ms** means approximately 99% of measured requests completed within 13 ms or less, with the remaining ~1% taking longer.
+
+These metrics answer different questions.
+
+**A system can have high throughput and still have terrible tail latency.**
+
+That's why I don't want to look at only one number.
+
+## 10. Why Putting Redis "Nearby" Matters
+
+Once I understood the problem, I started thinking about infrastructure differently.
+
+Consider four possible deployments:
+
+1. **Same machine:** `App ───── localhost ───── Redis` (Very low network overhead).
+2. **Same data center / region:** `App ─── private network ─── Redis` (Usually much better than crossing regions).
+3. **Different regions:** `App (US East) ──── (Long Distance) ────> Redis (Europe)` (Every synchronous Redis operation pays for that distance).
+4. **Poorly placed managed service:** Cloud does not automatically mean "Everything is nearby."
+
+## 11. Does This Mean You Should Never Use Cloud Redis?
+
+**No.**
+
+That would be the wrong conclusion.
+
+Cloud Redis can be an excellent production choice.
+
+Managed services give you things you don't get by simply running Redis on localhost:
+
+- availability
+- backups depending on the provider
+- monitoring
+- operational simplicity
+- scaling options
+- replication depending on the setup
+- infrastructure management handled for you
+
+The lesson isn't:
+
+`Local Redis is always better.`
+
+The lesson is:
+
+> **A dependency's performance is part of your application's architecture.**
+
+If your application and Redis are in the same region with a low-latency private network, a managed Redis service can perform very well.
+
+If your application is in one region and Redis is in another, every synchronous cache lookup may pay for that distance.
+
+The correct answer depends on the architecture.
+
+## 12. The Hidden Cost of "Just One Redis Call"
+
+This also made me think about the critical path.
+
+Suppose a request needs three synchronous services:
+
+```
+Application
+    │
+    ▼
+Redis
+    │
+    ▼
+Service B
+    │
+    ▼
+Database
+```
+
+If each network hop adds meaningful latency, those costs can accumulate.
+
+This is why the architecture matters.
+
+A single Redis call might look harmless.
+
+But if the application performs multiple remote calls for every request:
+
+```
+Request
+  │
+  ├──→ Redis
+  │
+  ├──→ Authentication service
+  │
+  ├──→ Another API
+  │
+  └──→ Database
+```
+
+you've created a **latency budget problem.**
+
+The individual services might all be "fast."
+
+The system can still be slow.
+
+## 13. Measure the Arrows, Not Just the Boxes
+
+This became the biggest lesson I took from the experiment.
+
+When looking at an architecture, we tend to focus on the boxes:
+
+```
+[Fastify]
+[Redis]
+[MongoDB]
+```
+
+We ask:
+
+- Is Fastify fast?
+- Is Redis fast?
+- Is MongoDB fast?
+
+But there are also arrows:
+
+```
+Fastify ─────────→ Redis
+Redis   ─────────→ Fastify
+Fastify ─────────→ MongoDB
+```
+
+**Those arrows represent communication. And communication has a cost.**
+
+So now, when I investigate latency, I try to map the entire request:
+
+```
+Client
+  ↓
+Load Balancer
+  ↓
+Application
+  ↓
+Cache
+  ↓
+Database
+```
+
+Then I ask:
+
+- How many network hops are here?
+- Which ones are synchronous?
+- What is the measured latency of each hop?
+- Where are these components physically located?
+- Which hop is on the critical path?
+
+Those questions are often more useful than immediately rewriting code.
+
+## 14. The Second Bottleneck I Found
+
+While investigating the performance problem, I found something else.
+
+My application was producing a large amount of structured request logging during high-concurrency benchmarks.
+
+Every request generated log output.
+
+Individually, logging didn't look expensive.
+
+But when the server was handling thousands of requests per second, formatting and writing that output consumed CPU.
+
+I eventually changed the log level during high-load benchmarking:
+
+`LOG_LEVEL=warn`
+
+That suppressed the normal informational request logs while retaining warnings and errors.
+
+This produced another improvement.
+
+It also reinforced an important point:
+
+**The tools you add to observe your application can themselves consume resources.**
+
+## 15. What I Would Check Before Adding Redis Today
+
+If I were adding Redis to a new application today, I wouldn't stop at:
+
+`"Redis is fast."`
+
+I'd ask:
+
+1. **Where is my application running?** (Local machine? Cloud VM? Container? Kubernetes? Serverless?)
+2. **Where is Redis running?** (Same machine? Same region? Different region? Public network? Private network?)
+3. **What is the actual RTT?** (What does my application measure?)
+4. **Is Redis actually on the critical path?**
+5. **What happens under load?**
+
+## 16. The Checklist I Wish I Had Before Adding Redis
+
+Here's the checklist I use now:
+
+- `[ ]` Where is the application running?
+- `[ ]` Where is Redis running?
+- `[ ]` Are they in the same region?
+- `[ ]` Are they connected through a private network?
+- `[ ]` What is the measured round-trip latency?
+- `[ ]` How much time does Redis itself spend processing the command?
+- `[ ]` How much time does the application spend waiting for the response?
+- `[ ]` Is the cache lookup on the critical request path?
+- `[ ]` Have I tested cache performance under realistic concurrency?
+- `[ ]` Am I measuring latency and throughput separately?
+
+It looks boring.
+
+But performance engineering is often about asking boring questions before making expensive changes.
+
+## 17. The Lesson I Took Away
+
+I started with a very simple mental model:
+
+`Redis = fast`
+
+Now my mental model is:
+
+```
+Application
+     │
+     │ network
+     ▼
+   Redis
+```
+
+The speed of Redis is only one part of the equation.
+
+A better model is:
+
+```
+Total perceived latency
+        =
+Application work
++
+Network latency
++
+Dependency processing
++
+Network latency
++
+Application response work
+```
+
+The exact breakdown depends on the system, but the principle remains:
+
+> **A fast dependency does not automatically make a fast application.**
+
+Your architecture determines how much of that dependency's latency your users actually experience.
+
+## 18. The Biggest Lesson: Don't Optimize What You Haven't Measured
+
+If I had blindly followed the usual advice, I might have:
+
+- changed Redis configuration
+- changed Redis libraries
+- added more caching
+- increased hardware
+- rewritten the cache layer
+
+None of those would have fixed the real problem.
+
+**The bottleneck was sitting between my application and Redis.**
+
+I found it because I stopped guessing and measured the request.
+
+That's probably the most valuable lesson I got from this experiment.
+
+> **Performance optimization is not about making everything faster. It's about finding the part that is actually slow.**
+
+And sometimes that part isn't inside your code at all.
+
+Sometimes it's the invisible distance between two boxes in your architecture.
+
+## The Takeaway
+
+Redis wasn't slow.
+
+My Redis command wasn't computationally expensive.
+
+My application was paying approximately 80 ms of network round-trip latency because the Redis instance was remote.
+
+Moving Redis closer removed that unnecessary network cost and transformed the measured performance of the system.
+
+The numbers made the lesson impossible to ignore:
+
+```
+Express + Cloud Redis
+345 req/sec | 228 ms p99
+
+        ↓
+
+Fastify + Cloud Redis
+488 req/sec | 169 ms p99
+
+        ↓
+
+Fastify + Local Redis + Reduced Logging
+6,809 req/sec | 13 ms p99
+```
+
+The final result came from multiple optimizations, but the most surprising discovery was simple:
+
+> **The bottleneck wasn't the service. It was the distance to the service.**
+
+So the next time you add a fast external dependency to your application, don't just ask:
+
+`"How fast is this service?"`
+
+Ask:
+
+> **"How fast can my application reach it?"**
+
+Because the boxes in your architecture matter.
+
+**But sometimes, the arrows matter even more.**
+
+**Thanks for reading! Subscribe for free to receive new posts and support my work.**

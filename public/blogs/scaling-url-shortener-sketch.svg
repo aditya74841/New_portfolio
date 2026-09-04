@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <!-- Blueprint / Notebook Grid Pattern -->
+    <pattern id="sketch-grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Notebook Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid)" />
+
+  <!-- Hand-drawn Outer Border -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="900 6 300 4" />
+
+  <!-- Header Title -->
+  <text x="60" y="75" font-family="'Courier New', Courier, monospace" font-size="32" font-weight="bold" fill="#1d2d44">URL Shortener Architecture: Monolith → 6,800+ req/sec</text>
+  <line x1="60" y1="90" x2="1140" y2="90" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="95" x2="900" y2="95" stroke="#0077b6" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- SECTION 1: LEGACY MONOLITH (Left) -->
+  <g filter="url(#hand-shadow)">
+    <rect x="60" y="125" width="320" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="80" y="160" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#d90429">Phase 1: Basic Express CRUD</text>
+
+    <!-- Client Box -->
+    <rect x="130" y="185" width="180" height="45" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="145" y="212" font-family="sans-serif" font-size="14" font-weight="bold" fill="#2b2d42">Client Requests</text>
+
+    <!-- Arrow down -->
+    <path d="M 220 230 L 220 265" stroke="#d90429" stroke-width="2.5" marker-end="url(#arrow)" />
+
+    <!-- Express Box -->
+    <rect x="110" y="270" width="220" height="75" fill="#ffe5ec" stroke="#d90429" stroke-width="2.5" rx="5" />
+    <text x="125" y="300" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#900c3f">Express.js Server</text>
+    <text x="125" y="325" font-family="sans-serif" font-size="13" fill="#555">(Single Event Loop Thread)</text>
+
+    <!-- Arrow down -->
+    <path d="M 220 345 L 220 380" stroke="#d90429" stroke-width="2.5" />
+
+    <!-- MongoDB Box -->
+    <rect x="110" y="385" width="220" height="75" fill="#ffe5ec" stroke="#d90429" stroke-width="2.5" rx="5" />
+    <text x="125" y="415" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#900c3f">MongoDB (Unindexed)</text>
+    <text x="125" y="440" font-family="sans-serif" font-size="13" fill="#555">Direct DB hit per redirect</text>
+
+    <!-- Bottleneck Metric -->
+    <rect x="80" y="485" width="280" height="105" fill="#f8f9fa" stroke="#d90429" stroke-width="2" stroke-dasharray="4 3" rx="4" />
+    <text x="95" y="515" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#d90429">⚠️ Bottlenecks Identified:</text>
+    <text x="95" y="540" font-family="sans-serif" font-size="13" fill="#2b2d42">• Max Throughput: ~350 req/sec</text>
+    <text x="95" y="565" font-family="sans-serif" font-size="13" fill="#2b2d42">• DB COLLSCAN on every click</text>
+    <text x="95" y="585" font-family="sans-serif" font-size="13" fill="#2b2d42">• Event loop blockage under load</text>
+  </g>
+
+  <!-- SECTION 2: PRODUCTION ARCHITECTURE (Right) -->
+  <g filter="url(#hand-shadow)">
+    <rect x="410" y="125" width="730" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="440" y="160" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#1b4332">Phase 2: Scaled Production Architecture</text>
+
+    <!-- Ingress / Nginx -->
+    <rect x="440" y="190" width="160" height="50" fill="#caf0f8" stroke="#0077b6" stroke-width="2.5" rx="4" />
+    <text x="455" y="220" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#03045e">Nginx Load Balancer</text>
+
+    <!-- Connectors from Nginx -->
+    <path d="M 600 215 L 670 215" stroke="#0077b6" stroke-width="3" />
+
+    <!-- Fastify Cluster -->
+    <rect x="670" y="180" width="220" height="110" fill="#d8f3dc" stroke="#2b9348" stroke-width="2.5" rx="6" />
+    <text x="685" y="210" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1b4332">Fastify Cluster Workers</text>
+    <text x="685" y="235" font-family="sans-serif" font-size="13" fill="#2b2d42">• Node.js Cluster Mode (CPU Core x N)</text>
+    <text x="685" y="255" font-family="sans-serif" font-size="13" fill="#2b2d42">• Schema-based JSON serialization</text>
+    <text x="685" y="275" font-family="sans-serif" font-size="13" fill="#2b2d42">• Ultra-low overhead HTTP engine</text>
+
+    <!-- Redis Cache Layer -->
+    <rect x="920" y="180" width="190" height="110" fill="#e0aaff" stroke="#7b2cbf" stroke-width="2.5" rx="6" />
+    <text x="935" y="210" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#3c096c">Redis Cache Layer</text>
+    <text x="935" y="235" font-family="sans-serif" font-size="13" fill="#2b2d42">• Sub-millisecond lookup</text>
+    <text x="935" y="255" font-family="sans-serif" font-size="13" fill="#2b2d42">• High hit ratio (~95%)</text>
+    <text x="935" y="275" font-family="sans-serif" font-size="13" fill="#2b2d42">• LRU Memory Eviction</text>
+
+    <!-- Arrows between Fastify, Redis, and DB -->
+    <path d="M 890 235 L 920 235" stroke="#7b2cbf" stroke-width="3" />
+    <path d="M 780 290 L 780 340" stroke="#2b9348" stroke-width="3" />
+
+    <!-- BullMQ Async Queue -->
+    <rect x="670" y="340" width="220" height="80" fill="#ffecd1" stroke="#d4a373" stroke-width="2.5" rx="6" />
+    <text x="685" y="370" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#78350f">BullMQ / Worker Queue</text>
+    <text x="685" y="395" font-family="sans-serif" font-size="13" fill="#2b2d42">Async click analytics &amp; logs</text>
+
+    <path d="M 890 380 L 920 380" stroke="#d4a373" stroke-width="3" />
+
+    <!-- MongoDB Indexed -->
+    <rect x="920" y="340" width="190" height="80" fill="#d8f3dc" stroke="#2b9348" stroke-width="2.5" rx="6" />
+    <text x="935" y="370" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">MongoDB (Indexed)</text>
+    <text x="935" y="395" font-family="sans-serif" font-size="13" fill="#2b2d42">IXSCAN B-Tree Persistence</text>
+
+    <!-- Benchmark Chart Box -->
+    <rect x="440" y="440" width="670" height="150" fill="#edf2f4" stroke="#1d2d44" stroke-width="2" rx="4" />
+    <text x="460" y="470" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1d2d44">📊 Benchmarks: Autocannon &amp; Load Testing Results</text>
+    
+    <!-- Express bar -->
+    <text x="460" y="505" font-family="sans-serif" font-size="13" font-weight="bold" fill="#d90429">Express (Monolith): 350 req/sec</text>
+    <rect x="690" y="492" width="40" height="16" fill="#d90429" rx="2" />
+    
+    <!-- Fastify + Redis bar -->
+    <text x="460" y="540" font-family="sans-serif" font-size="13" font-weight="bold" fill="#2b9348">Fastify + Redis + Clustering: 6,842 req/sec</text>
+    <rect x="690" y="527" width="390" height="16" fill="#2b9348" rx="2" />
+
+    <text x="460" y="575" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#0077b6">🚀 19.5x Throughput Increase | p99 Latency: 12ms</text>
+  </g>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <pattern id="sketch-grid-6" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow-6" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid-6)" />
+
+  <!-- Outer Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="870 5 330 4" />
+
+  <!-- Header -->
+  <text x="60" y="75" font-family="'Courier New', Courier, monospace" font-size="30" font-weight="bold" fill="#1d2d44">Your Logs Are Slowing Your Server Down: Observability Overhead</text>
+  <line x1="60" y1="90" x2="1140" y2="90" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="95" x2="940" y2="95" stroke="#e63946" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- LEFT PANEL: HIGH-VOLUME VERBOSE LOGGING BOTTLENECK -->
+  <g filter="url(#hand-shadow-6)">
+    <rect x="60" y="125" width="530" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="85" y="160" font-family="'Courier New', Courier, monospace" font-size="19" font-weight="bold" fill="#d90429">⚠️ Verbose Logging (LOG_LEVEL=info)</text>
+
+    <!-- Flow Box -->
+    <rect x="85" y="185" width="480" height="85" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="100" y="210" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#900c3f">6,000 HTTP Requests / second</text>
+    <text x="100" y="235" font-family="sans-serif" font-size="13" fill="#d90429">× 2 log entries/req = 12,000 Log Events/sec</text>
+    <text x="100" y="255" font-family="sans-serif" font-size="12" fill="#555">JSON stringify + timestamp + stdout stream write</text>
+
+    <!-- Pipeline arrow -->
+    <path d="M 325 270 L 325 310" stroke="#d90429" stroke-width="3" />
+
+    <!-- CPU Bottleneck Card -->
+    <rect x="85" y="310" width="480" height="110" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="105" y="340" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1d2d44">CPU &amp; Disk I/O Competition:</text>
+    <text x="105" y="365" font-family="sans-serif" font-size="13" fill="#2b2d42">• CPU spends time formatting JSON strings.</text>
+    <text x="105" y="388" font-family="sans-serif" font-size="13" fill="#2b2d42">• Event loop blocked during synchronous stream writes.</text>
+    <text x="105" y="410" font-family="sans-serif" font-size="13" fill="#d90429">• Observability tools competing with core business logic.</text>
+
+    <!-- Result Banner Left -->
+    <rect x="85" y="440" width="480" height="140" fill="#ffe5ec" stroke="#d90429" stroke-width="2" stroke-dasharray="4 3" rx="4" />
+    <text x="105" y="470" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#d90429">❌ THROUGHPUT: ~5,200 req/sec</text>
+    <text x="105" y="500" font-family="sans-serif" font-size="13" fill="#2b2d42">• Logging isn't free.</text>
+    <text x="105" y="525" font-family="sans-serif" font-size="13" fill="#2b2d42">• At high traffic, multiplication turns tiny costs into a wall.</text>
+    <text x="105" y="550" font-family="sans-serif" font-style="italic" fill="#555">"Describing the work consumed CPU needed for work."</text>
+  </g>
+
+  <!-- RIGHT PANEL: OPTIMIZED LOG LEVEL -->
+  <g filter="url(#hand-shadow-6)">
+    <rect x="620" y="125" width="520" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="645" y="160" font-family="'Courier New', Courier, monospace" font-size="19" font-weight="bold" fill="#1b4332">🚀 Production Log Level (LOG_LEVEL=warn)</text>
+
+    <!-- Flow Box Right -->
+    <rect x="645" y="185" width="470" height="85" fill="#d8f3dc" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="210" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#1b4332">Level Check: info &lt; warn</text>
+    <text x="665" y="235" font-family="sans-serif" font-size="13" fill="#2b9348">✔ Immediately discards info log before serialization!</text>
+    <text x="665" y="255" font-family="sans-serif" font-size="12" fill="#555">0 JSON stringify ops • 0 I/O stream writes</text>
+
+    <!-- Pipeline arrow -->
+    <path d="M 880 270 L 880 310" stroke="#2b9348" stroke-width="3" />
+
+    <!-- CPU Freed Card -->
+    <rect x="645" y="310" width="470" height="110" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="665" y="340" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1d2d44">CPU 100% Dedicated to Traffic:</text>
+    <text x="665" y="365" font-family="sans-serif" font-size="13" fill="#2b2d42">• Event loop freed from logging overhead.</text>
+    <text x="665" y="388" font-family="sans-serif" font-size="13" fill="#2b2d42">• Critical errors/warnings are still caught.</text>
+    <text x="665" y="410" font-family="sans-serif" font-size="13" stroke="none" fill="#2b9348">• Zero-cost early return on log calls.</text>
+
+    <!-- Result Banner Right -->
+    <rect x="645" y="440" width="470" height="140" fill="#e8f5e9" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="470" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1b4332">✔ THROUGHPUT: 6,809 req/sec (+1,600 req/s!)</text>
+    <text x="665" y="500" font-family="sans-serif" font-size="13" fill="#2b2d42">• +30.9% Throughput Increase!</text>
+    <text x="665" y="525" font-family="sans-serif" font-size="13" fill="#2b2d42">• p99 Latency dropped to 13 ms.</text>
+    <text x="665" y="550" font-family="sans-serif" font-weight="bold" fill="#0077b6">"One configuration change. Measurable improvement."</text>
+  </g>
+</svg>

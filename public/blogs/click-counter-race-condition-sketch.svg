@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <pattern id="sketch-grid-3" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow-3" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Notebook Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid-3)" />
+
+  <!-- Outer Sketch Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="850 5 350 4" />
+
+  <!-- Title Header -->
+  <text x="60" y="75" font-family="'Courier New', Courier, monospace" font-size="32" font-weight="bold" fill="#1d2d44">Your Click Counter Is Lying to You: Race Conditions</text>
+  <line x1="60" y1="90" x2="1140" y2="90" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="95" x2="920" y2="95" stroke="#d90429" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- SECTION 1: THE BUG - RACE CONDITION (Left) -->
+  <g filter="url(#hand-shadow-3)">
+    <rect x="60" y="125" width="530" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="85" y="160" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#d90429">⚠️ The Bug: Read-Modify-Write (Lost Update)</text>
+
+    <!-- User A & B Timelines -->
+    <rect x="85" y="185" width="220" height="30" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="100" y="206" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#900c3f">User A (Request 1)</text>
+
+    <rect x="345" y="185" width="220" height="30" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="360" y="206" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#900c3f">User B (Request 2)</text>
+
+    <!-- Step 1: Concurrent Reads -->
+    <path d="M 195 215 L 195 250" stroke="#2b2d42" stroke-width="2" />
+    <path d="M 455 215 L 455 250" stroke="#2b2d42" stroke-width="2" />
+
+    <rect x="85" y="250" width="220" height="50" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="100" y="272" font-family="sans-serif" font-size="13" fill="#2b2d42">1. findOne()</text>
+    <text x="100" y="290" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#d90429">Reads clicks = 10</text>
+
+    <rect x="345" y="250" width="220" height="50" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="360" y="272" font-family="sans-serif" font-size="13" fill="#2b2d42">1. findOne()</text>
+    <text x="360" y="290" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#d90429">Reads clicks = 10</text>
+
+    <!-- Step 2: In-Memory Modifies -->
+    <path d="M 195 300 L 195 335" stroke="#2b2d42" stroke-width="2" />
+    <path d="M 455 300 L 455 335" stroke="#2b2d42" stroke-width="2" />
+
+    <rect x="85" y="335" width="220" height="50" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="100" y="357" font-family="sans-serif" font-size="13" fill="#2b2d42">2. Local calculation</text>
+    <text x="100" y="375" font-family="'Courier New', Courier, monospace" font-size="13" fill="#2b2d42">clicks = 10 + 1 (11)</text>
+
+    <rect x="345" y="335" width="220" height="50" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="360" y="357" font-family="sans-serif" font-size="13" fill="#2b2d42">2. Local calculation</text>
+    <text x="360" y="375" font-family="'Courier New', Courier, monospace" font-size="13" fill="#2b2d42">clicks = 10 + 1 (11)</text>
+
+    <!-- Step 3: Writes -->
+    <path d="M 195 385 L 195 420" stroke="#2b2d42" stroke-width="2" />
+    <path d="M 455 385 L 455 420" stroke="#2b2d42" stroke-width="2" />
+
+    <rect x="85" y="420" width="220" height="45" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="100" y="447" font-family="'Courier New', Courier, monospace" font-size="14" fill="#900c3f">save() → DB = 11</text>
+
+    <rect x="345" y="420" width="220" height="45" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="360" y="447" font-family="'Courier New', Courier, monospace" font-size="14" fill="#900c3f">save() → Overwrites 11!</text>
+
+    <!-- Result Banner -->
+    <rect x="85" y="485" width="480" height="100" fill="#f8f9fa" stroke="#d90429" stroke-width="2" stroke-dasharray="4 3" rx="4" />
+    <text x="105" y="515" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#d90429">❌ RESULT: Expected: 12 | Actual: 11</text>
+    <text x="105" y="540" font-family="sans-serif" font-size="13" fill="#2b2d42">• 2 clicks occurred, but 1 click was silently lost!</text>
+    <text x="105" y="565" font-family="sans-serif" font-size="13" fill="#555">• No error, no crash — just corrupt data.</text>
+  </g>
+
+  <!-- SECTION 2: THE FIX - ATOMIC $inc (Right) -->
+  <g filter="url(#hand-shadow-3)">
+    <rect x="620" y="125" width="520" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="645" y="160" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#1b4332">✅ The Fix: Atomic MongoDB $inc Operator</text>
+
+    <!-- Application Code -->
+    <rect x="645" y="190" width="470" height="110" fill="#d8f3dc" stroke="#2b9348" stroke-width="2.5" rx="5" />
+    <text x="665" y="220" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">ShortUrl.findOneAndUpdate(</text>
+    <text x="685" y="245" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">{ short: shortCode },</text>
+    <text x="685" y="270" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#2b9348">{ $inc: { clicks: 1 } }</text>
+    <text x="665" y="290" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">);</text>
+
+    <!-- Arrow down to MongoDB -->
+    <path d="M 880 300 L 880 345" stroke="#2b9348" stroke-width="3" />
+
+    <!-- MongoDB Atomic Box -->
+    <rect x="645" y="345" width="470" height="120" fill="#caf0f8" stroke="#0077b6" stroke-width="2.5" rx="5" />
+    <text x="665" y="375" font-family="'Courier New', Courier, monospace" font-size="17" font-weight="bold" fill="#03045e">MongoDB Engine (Single Document Lock)</text>
+    <text x="665" y="405" font-family="sans-serif" font-size="14" fill="#2b2d42">Req A: $inc (10 → 11) [Atomic Operation]</text>
+    <text x="665" y="430" font-family="sans-serif" font-size="14" fill="#2b2d42">Req B: $inc (11 → 12) [Queued At Engine Level]</text>
+
+    <!-- Result Banner Right -->
+    <rect x="645" y="485" width="470" height="100" fill="#e8f5e9" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="515" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1b4332">✔ RESULT: Expected: 12 | Actual: 12</text>
+    <text x="665" y="540" font-family="sans-serif" font-size="13" fill="#2b2d42">• Zero lost updates, zero race conditions!</text>
+    <text x="665" y="565" font-family="sans-serif" font-size="13" font-weight="bold" fill="#0077b6">• Offloaded concurrency safety to the DB engine.</text>
+  </g>
+</svg>

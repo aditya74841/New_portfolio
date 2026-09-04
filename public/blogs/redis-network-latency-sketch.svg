@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <pattern id="sketch-grid-4" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow-4" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Notebook Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid-4)" />
+
+  <!-- Outer Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="880 5 320 4" />
+
+  <!-- Title Header -->
+  <text x="60" y="75" font-family="'Courier New', Courier, monospace" font-size="30" font-weight="bold" fill="#1d2d44">Measure the Arrows, Not Just the Boxes: Redis Network RTT</text>
+  <line x1="60" y1="90" x2="1140" y2="90" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="95" x2="940" y2="95" stroke="#7b2cbf" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- SECTION 1: CLOUD REDIS LATENCY (Left) -->
+  <g filter="url(#hand-shadow-4)">
+    <rect x="60" y="125" width="530" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="85" y="160" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#d90429">⚠️ Cloud Redis (Remote RTT Bottleneck)</text>
+
+    <!-- App Node -->
+    <rect x="85" y="190" width="180" height="60" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="100" y="225" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1d2d44">Fastify App Server</text>
+
+    <!-- Network Arrow -->
+    <path d="M 265 220 L 375 220" stroke="#d90429" stroke-width="3" stroke-dasharray="6 4" />
+    <text x="275" y="210" font-family="sans-serif" font-size="12" font-weight="bold" fill="#d90429">Public Net ~80ms RTT</text>
+
+    <!-- Cloud Redis Node -->
+    <rect x="375" y="190" width="190" height="60" fill="#ffe5ec" stroke="#d90429" stroke-width="2.5" rx="4" />
+    <text x="390" y="215" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#900c3f">Cloud Redis Host</text>
+    <text x="390" y="235" font-family="sans-serif" font-size="12" fill="#555">Op time: ~0.147 ms</text>
+
+    <!-- Breakdown Card -->
+    <rect x="85" y="275" width="480" height="150" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="105" y="305" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1d2d44">Latency Breakdown (Cache Hit):</text>
+    <text x="105" y="332" font-family="sans-serif" font-size="13" fill="#2b2d42">• Outbound request travel: ~40 ms</text>
+    <text x="105" y="355" font-family="sans-serif" font-size="13" fill="#2b2d42">• Redis command execution: 0.147 ms</text>
+    <text x="105" y="378" font-family="sans-serif" font-size="13" fill="#2b2d42">• Inbound response travel: ~40 ms</text>
+    <text x="105" y="405" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#d90429">Total perceived Redis lookup: ~80 ms</text>
+
+    <!-- Result Banner -->
+    <rect x="85" y="445" width="480" height="140" fill="#ffe5ec" stroke="#d90429" stroke-width="2" stroke-dasharray="4 3" rx="4" />
+    <text x="105" y="475" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#d90429">❌ BENCHMARK: 488 req/sec | p99: 169 ms</text>
+    <text x="105" y="505" font-family="sans-serif" font-size="13" fill="#2b2d42">• The service wasn't slow.</text>
+    <text x="105" y="530" font-family="sans-serif" font-size="13" fill="#2b2d42">• The distance to the service was the bottleneck!</text>
+    <text x="105" y="555" font-family="sans-serif" font-style="italic" fill="#555">"Like ordering food from 50 km away."</text>
+  </g>
+
+  <!-- SECTION 2: LOCAL/PRIVATE REDIS (Right) -->
+  <g filter="url(#hand-shadow-4)">
+    <rect x="620" y="125" width="520" height="490" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="645" y="160" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#1b4332">🚀 Local / Low-Latency Co-located Redis</text>
+
+    <!-- App Node -->
+    <rect x="645" y="190" width="180" height="60" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="660" y="225" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1d2d44">Fastify App Server</text>
+
+    <!-- Loopback Arrow -->
+    <path d="M 825 220 L 925 220" stroke="#2b9348" stroke-width="3" />
+    <text x="835" y="210" font-family="sans-serif" font-size="12" font-weight="bold" fill="#2b9348">loopback &lt; 0.5ms</text>
+
+    <!-- Local Redis Node -->
+    <rect x="925" y="190" width="190" height="60" fill="#d8f3dc" stroke="#2b9348" stroke-width="2.5" rx="4" />
+    <text x="940" y="215" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">Local / VPC Redis</text>
+    <text x="940" y="235" font-family="sans-serif" font-size="12" fill="#2b2d42">Op time: ~0.147 ms</text>
+
+    <!-- Breakdown Card -->
+    <rect x="645" y="275" width="470" height="150" fill="#edf2f4" stroke="#2b2d42" stroke-width="2" rx="4" />
+    <text x="665" y="305" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1d2d44">Latency Breakdown (Cache Hit):</text>
+    <text x="665" y="332" font-family="sans-serif" font-size="13" fill="#2b2d42">• Outbound request travel: &lt; 0.2 ms</text>
+    <text x="665" y="355" font-family="sans-serif" font-size="13" fill="#2b2d42">• Redis command execution: 0.147 ms</text>
+    <text x="665" y="378" font-family="sans-serif" font-size="13" fill="#2b2d42">• Inbound response travel: &lt; 0.2 ms</text>
+    <text x="665" y="405" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#2b9348">Total perceived Redis lookup: &lt; 0.5 ms</text>
+
+    <!-- Result Banner Right -->
+    <rect x="645" y="445" width="470" height="140" fill="#e8f5e9" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="475" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="bold" fill="#1b4332">✔ BENCHMARK: 6,809 req/sec | p99: 13 ms</text>
+    <text x="665" y="505" font-family="sans-serif" font-size="13" fill="#2b2d42">• 14x Throughput Boost!</text>
+    <text x="665" y="530" font-family="sans-serif" font-size="13" fill="#2b2d42">• 92% Reduction in p99 Latency!</text>
+    <text x="665" y="555" font-family="sans-serif" font-weight="bold" fill="#0077b6">"Boxes matter, but arrows matter even more."</text>
+  </g>
+</svg>
