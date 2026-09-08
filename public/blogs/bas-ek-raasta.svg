@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">बस एक रास्ता दिखा दीजिए</title>
+  <desc id="desc">A lone traveler on a winding path under a starry night sky towards a glowing light on the horizon.</desc>
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#070913"/>
+      <stop offset="50%" stop-color="#121629"/>
+      <stop offset="85%" stop-color="#211d3b"/>
+      <stop offset="100%" stop-color="#3d2a45"/>
+    </linearGradient>
+    <linearGradient id="horizonGlow" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.6"/>
+      <stop offset="40%" stop-color="#d97706" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#3d2a45" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="pathGrad" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.8"/>
+      <stop offset="35%" stop-color="#f59e0b" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#d97706" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0.9"/>
+    </linearGradient>
+    <radialGradient id="beaconGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffbeb" stop-opacity="1"/>
+      <stop offset="25%" stop-color="#fde68a" stop-opacity="0.8"/>
+      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Sky Background -->
+  <rect width="1600" height="900" fill="url(#skyGrad)"/>
+
+  <!-- Stars -->
+  <g fill="#ffffff" opacity="0.65">
+    <circle cx="150" cy="120" r="1.5"/>
+    <circle cx="280" cy="80" r="1"/>
+    <circle cx="390" cy="190" r="2"/>
+    <circle cx="520" cy="110" r="1.5"/>
+    <circle cx="670" cy="160" r="1"/>
+    <circle cx="780" cy="90" r="2.5" opacity="0.9"/>
+    <circle cx="920" cy="140" r="1.5"/>
+    <circle cx="1060" cy="85" r="2"/>
+    <circle cx="1200" cy="170" r="1"/>
+    <circle cx="1340" cy="100" r="2.5" opacity="0.85"/>
+    <circle cx="1470" cy="150" r="1.5"/>
+    <circle cx="210" cy="260" r="1"/>
+    <circle cx="340" cy="320" r="1.5"/>
+    <circle cx="1280" cy="270" r="1.5"/>
+    <circle cx="1420" cy="340" r="2"/>
+    <circle cx="730" cy="230" r="1.5"/>
+    <circle cx="890" cy="250" r="1"/>
+    <circle cx="1130" cy="210" r="2"/>
+  </g>
+
+  <!-- Distant Mountains Layer 1 -->
+  <path d="M0 640 Q250 560 520 600 T1100 580 T1600 620 L1600 900 L0 900 Z" fill="#18172e" opacity="0.7"/>
+
+  <!-- Distant Mountains Layer 2 -->
+  <path d="M0 670 Q380 610 740 645 T1450 630 T1600 660 L1600 900 L0 900 Z" fill="#131424" opacity="0.9"/>
+
+  <!-- Horizon Warm Light Glow -->
+  <ellipse cx="800" cy="625" rx="360" ry="140" fill="url(#horizonGlow)"/>
+
+  <!-- Ground Foreground -->
+  <path d="M0 720 Q400 690 800 700 T1600 710 L1600 900 L0 900 Z" fill="#0d0e17"/>
+
+  <!-- The Winding Path -->
+  <path d="M800 625 C810 650, 785 680, 830 720 C885 770, 740 820, 800 900" fill="none" stroke="url(#pathGrad)" stroke-width="28" stroke-linecap="round"/>
+  <path d="M800 625 C810 650, 785 680, 830 720 C885 770, 740 820, 800 900" fill="none" stroke="#fef3c7" stroke-width="6" stroke-linecap="round" opacity="0.75" filter="url(#softGlow)"/>
+
+  <!-- The Guiding Light / Beacon on the Horizon -->
+  <circle cx="800" cy="622" r="55" fill="url(#beaconGlow)"/>
+  <circle cx="800" cy="622" r="6" fill="#fffdf5" filter="url(#softGlow)"/>
+  <!-- Light Ray -->
+  <path d="M800 622 L800 540" stroke="#fde68a" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Traveler Silhouette (Walking along the path towards the light) -->
+  <g transform="translate(812, 730) scale(0.65)" fill="#07080f">
+    <!-- Head -->
+    <circle cx="12" cy="0" r="9"/>
+    <!-- Torso -->
+    <path d="M4 14 C4 10, 20 10, 20 14 L23 48 C23 50, 1 50, 1 48 Z"/>
+    <!-- Cloak / Coat edge -->
+    <path d="M2 24 Q-5 45 -2 55 L8 50 Z" opacity="0.9"/>
+    <!-- Legs -->
+    <line x1="8" y1="48" x2="3" y2="86" stroke="#07080f" stroke-width="5" stroke-linecap="round"/>
+    <line x1="16" y1="48" x2="21" y2="84" stroke="#07080f" stroke-width="5" stroke-linecap="round"/>
+    <!-- Staff / Walking stick -->
+    <line x1="26" y1="8" x2="30" y2="88" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Typography Header -->
+  <g text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+    <!-- Title -->
+    <text x="800" y="195" font-size="54" font-weight="800" fill="#f8fafc" letter-spacing="1">
+      बस एक रास्ता दिखा दीजिए
+    </text>
+    <!-- Subtitle -->
+    <text x="800" y="255" font-size="22" font-weight="400" fill="#cbd5e1" opacity="0.85">
+      भटकन, सन्नाटा और प्रभु से एक सही राह की प्रार्थना
+    </text>
+  </g>
+</svg>
+
