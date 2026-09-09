@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <pattern id="sketch-grid-diary" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow-diary" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Notebook Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid-diary)" />
+
+  <!-- Outer Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="900 6 300 4" />
+
+  <!-- Title Header -->
+  <text x="60" y="72" font-family="'Courier New', Courier, monospace" font-size="28" font-weight="bold" fill="#1d2d44">Simple Diary: The Silent Overwrite Bug</text>
+  <line x1="60" y1="88" x2="1140" y2="88" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="93" x2="960" y2="93" stroke="#d90429" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- LEFT PANEL: THE BUG (Silent Overwrite) -->
+  <g filter="url(#hand-shadow-diary)">
+    <rect x="60" y="120" width="530" height="500" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="85" y="152" font-family="'Courier New', Courier, monospace" font-size="18" font-weight="bold" fill="#d90429">⚠️ The Bug: Async Race + Fake User Edit</text>
+
+    <!-- Step 1: User switches date -->
+    <rect x="85" y="172" width="480" height="42" fill="#edf2f4" stroke="#2b2d42" stroke-width="1.8" rx="4" />
+    <text x="100" y="192" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="bold" fill="#1d2d44">1. User on Sep 8 ("") switches to Sep 7 ("Worked on project")</text>
+    <text x="100" y="206" font-family="sans-serif" font-size="11" fill="#666">selectedDate = "Sep 7" immediately · Fetch initiated</text>
+
+    <!-- Step 2: Clear Editor & Fake Change -->
+    <path d="M 325 214 L 325 228" stroke="#d90429" stroke-width="2" />
+    <rect x="85" y="228" width="480" height="62" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="100" y="248" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#900c3f">2. App clears editor: setContent("")</text>
+    <text x="100" y="266" font-family="sans-serif" font-size="12" fill="#d90429">💥 ReactQuill fires onChange("") [source: "api"]</text>
+    <text x="100" y="280" font-family="sans-serif" font-size="11" fill="#900c3f">App ignores source! Treats it as real user typing!</text>
+
+    <!-- Step 3: Debounce Scheduled -->
+    <path d="M 325 290 L 325 304" stroke="#d90429" stroke-width="2" />
+    <rect x="85" y="304" width="480" height="52" fill="#edf2f4" stroke="#2b2d42" stroke-width="1.8" rx="4" />
+    <text x="100" y="324" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="bold" fill="#1d2d44">3. Auto-save Debounce Scheduled (3 seconds)</text>
+    <text x="100" y="342" font-family="sans-serif" font-size="11" fill="#444">timer = setTimeout(() =&gt; save(selectedDate, content), 3000)</text>
+
+    <!-- Step 4: Content Arrives then Timer Overwrites -->
+    <path d="M 325 356 L 325 370" stroke="#d90429" stroke-width="2" />
+    <rect x="85" y="370" width="480" height="68" fill="#ffe5ec" stroke="#d90429" stroke-width="2" rx="4" />
+    <text x="100" y="390" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="bold" fill="#900c3f">4. Sep 7 data arrives... THEN Debounce Timer Fires!</text>
+    <text x="100" y="408" font-family="sans-serif" font-size="12" fill="#2b2d42">Timer reads mutable state: saves empty string "" to Sep 7</text>
+    <text x="100" y="425" font-family="'Courier New', Courier, monospace" font-size="11" fill="#d90429">PUT /api/entries/2026-09-07 { content: "" } → 200 OK</text>
+
+    <!-- Result Box -->
+    <rect x="85" y="452" width="480" height="148" fill="#f8f9fa" stroke="#d90429" stroke-width="2" stroke-dasharray="4 3" rx="4" />
+    <text x="105" y="478" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#d90429">❌ RESULT: SILENT DATA DESTRUCTION</text>
+    <text x="105" y="504" font-family="sans-serif" font-size="13" fill="#2b2d42">• Sep 7 original writing is completely wiped out.</text>
+    <text x="105" y="528" font-family="sans-serif" font-size="13" fill="#2b2d42">• Zero errors: Frontend 200 OK, MongoDB updated.</text>
+    <text x="105" y="552" font-family="sans-serif" font-size="13" fill="#2b2d42">• The database faithfully executed the wrong instruction.</text>
+    <text x="105" y="582" font-family="sans-serif" font-style="italic" font-size="12" fill="#777">"A successful operation can still be the wrong operation."</text>
+  </g>
+
+  <!-- RIGHT PANEL: THE FIX (Defense in Depth) -->
+  <g filter="url(#hand-shadow-diary)">
+    <rect x="620" y="120" width="520" height="500" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="645" y="152" font-family="'Courier New', Courier, monospace" font-size="18" font-weight="bold" fill="#1b4332">✅ The Fix: Identity + Local-First + Defense</text>
+
+    <!-- Fix 1: Event Source Filter -->
+    <rect x="645" y="172" width="470" height="66" fill="#d8f3dc" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="660" y="194" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#1b4332">1. Filter Event Source (No Fake Edits)</text>
+    <text x="660" y="214" font-family="'Courier New', Courier, monospace" font-size="12" fill="#2d6a4f">onChange={(content, delta, source) =&gt; {</text>
+    <text x="660" y="230" font-family="'Courier New', Courier, monospace" font-size="12" fill="#2d6a4f">  if (source === "user") handleContentChange(content);</text>
+    <text x="660" y="238" font-family="'Courier New', Courier, monospace" font-size="12" fill="#2d6a4f">}}</text>
+
+    <!-- Fix 2: Closure Identity -->
+    <rect x="645" y="248" width="470" height="66" fill="#d8f3dc" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="660" y="270" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#1b4332">2. Preserved Job Identity in Closures</text>
+    <text x="660" y="290" font-family="'Courier New', Courier, monospace" font-size="12" fill="#2d6a4f">const dateBeingSaved = selectedDate;</text>
+    <text x="660" y="306" font-family="'Courier New', Courier, monospace" font-size="12" fill="#2d6a4f">setTimeout(() =&gt; save(dateBeingSaved, content), 3000);</text>
+
+    <!-- Fix 3: Local-First IndexedDB -->
+    <rect x="645" y="324" width="470" height="66" fill="#caf0f8" stroke="#0077b6" stroke-width="2" rx="4" />
+    <text x="660" y="346" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#03045e">3. Local-First Architecture</text>
+    <text x="660" y="366" font-family="sans-serif" font-size="12" fill="#0077b6">User writes → IndexedDB (Instant) → Background Sync</text>
+    <text x="660" y="382" font-family="sans-serif" font-size="11" fill="#555">Zero network delay on critical writing path + full offline support</text>
+
+    <!-- Fix 4: Backend Validation Guard -->
+    <rect x="645" y="400" width="470" height="52" fill="#edf2f4" stroke="#2b2d42" stroke-width="1.8" rx="4" />
+    <text x="660" y="420" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="bold" fill="#1d2d44">4. Backend Defense-in-Depth</text>
+    <text x="660" y="438" font-family="sans-serif" font-size="11" fill="#444">Reject/warn if substantial content is replaced with empty string</text>
+
+    <!-- Result Box Right -->
+    <rect x="645" y="462" width="470" height="138" fill="#e8f5e9" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="488" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">✔ RESULT: RESILIENT &amp; SAFE SYSTEM</text>
+    <text x="665" y="514" font-family="sans-serif" font-size="13" fill="#2b2d42">• Zero ghost edits; delayed jobs retain snapshot identity.</text>
+    <text x="665" y="538" font-family="sans-serif" font-size="13" fill="#2b2d42">• Instant local writes with quiet background sync status.</text>
+    <text x="665" y="562" font-family="sans-serif" font-size="13" font-weight="bold" fill="#0077b6">• Multi-layer defense prevents catastrophic data loss.</text>
+    <text x="665" y="586" font-family="sans-serif" font-style="italic" font-size="12" fill="#555">"Even a simple diary is a distributed system."</text>
+  </g>
+</svg>
+

@@ -1,0 +1,765 @@
+---
+title: "I Built a Simple Diary App. Then It Almost Deleted My Data."
+date: "2026-09-09"
+excerpt: "A simple date switch in my diary app exposed a silent data loss bug. No crashes, no 500s — just race conditions, debounce closures, and the lessons that led me to local-first architecture."
+tags: ["Tech", "React", "Frontend", "Architecture", "System Design"]
+coverImage: "/blogs/simple-diary-data-loss-sketch.svg"
+language: "en"
+published: true
+featured: true
+---
+
+I wanted to build a simple diary.
+
+Nothing complicated.
+
+Every date would have its own page:
+
+```text
+September 8, 2026
+
+┌──────────────────────────────────┐
+│                                  │
+│  What happened today?            │
+│                                  │
+│  I worked on my project...       │
+│                                  │
+└──────────────────────────────────┘
+```
+
+No documents to create.
+No titles to manage.
+
+The date itself would identify the diary entry.
+
+I thought this would be a straightforward CRUD application.
+
+I was wrong.
+
+A simple date switch eventually exposed a bug that could silently overwrite an existing diary entry. There was no crash. No `500` error. The database was working perfectly.
+
+The problem was that my application was telling it to do the wrong thing.
+
+And fixing that bug taught me more about engineering than building another CRUD application ever could.
+
+---
+
+## The first architecture
+
+My initial architecture was simple:
+
+```text
+React
+  ↓
+Zustand
+  ↓
+REST API
+  ↓
+MongoDB
+```
+
+For the editor, I used ReactQuill.
+
+I also wanted the application to save automatically, so I implemented debouncing.
+
+The idea was simple:
+
+```text
+User types
+    ↓
+wait 3 seconds
+    ↓
+user stopped typing
+    ↓
+save
+```
+
+Instead of making an API request for every keystroke, the application would wait until the user stopped typing.
+
+Completely reasonable.
+
+Until date navigation entered the picture.
+
+---
+
+## The bug
+
+Imagine this:
+
+September 8 has no entry.
+
+```text
+September 8
+content = ""
+```
+
+Now I switch to September 7.
+
+September 7 already contains:
+
+```text
+"I worked on my project today..."
+```
+
+The expected flow is:
+
+```text
+Empty Sep 8
+      ↓
+Switch to Sep 7
+      ↓
+Fetch Sep 7
+      ↓
+Show Sep 7 content
+```
+
+Instead, under the right timing, something much worse could happen.
+
+```text
+Sep 7 originally
+"I worked on my project..."
+
+        ↓
+
+Sep 7 after the bug
+
+""
+```
+
+My diary entry was gone.
+
+And the strangest part?
+
+**Nothing actually failed.**
+
+The API could return:
+
+```text
+200 OK
+```
+
+MongoDB could successfully update the document.
+
+There might be no exception at all.
+
+The frontend succeeded.
+
+The API succeeded.
+
+The database succeeded.
+
+But the user's data was still destroyed.
+
+That was the first important lesson:
+
+> **A successful operation can still be the wrong operation.**
+
+---
+
+![Simple Diary Architecture and Silent Overwrite Bug Sketch](/blogs/simple-diary-data-loss-sketch.svg)
+
+---
+
+## What was actually happening?
+
+It wasn't one isolated bug.
+
+Several perfectly normal pieces of code were interacting in an unsafe way:
+
+```text
+User on Date A
+      ↓
+Editor is empty
+      ↓
+User switches to Date B
+      ↓
+Selected date changes immediately
+      ↓
+Date B is being fetched asynchronously
+      ↓
+Editor is cleared
+      ↓
+Editor reports a change
+      ↓
+Application thinks the user edited
+      ↓
+Auto-save is scheduled
+      ↓
+Date B's content arrives
+      ↓
+Old timer still exists
+      ↓
+Timer fires
+      ↓
+Empty content is saved
+      ↓
+Existing entry is overwritten
+```
+
+This is where things became interesting.
+
+---
+
+## State doesn't always change at the same speed
+
+Suppose I select September 7.
+
+My application can immediately change:
+
+```text
+selectedDate = Sep 7
+```
+
+But the API request takes time.
+
+During that time, I might still have:
+
+```text
+activeEntry = Sep 8
+```
+
+So temporarily:
+
+```text
+selectedDate = Sep 7
+
+activeEntry = Sep 8
+```
+
+That's not automatically a bug.
+
+It's a normal consequence of asynchronous operations.
+
+But my UI needed to understand this intermediate state correctly.
+
+It didn't.
+
+Because the application noticed:
+
+```text
+selectedDate !== activeEntry.date
+```
+
+it cleared the editor.
+
+Conceptually:
+
+```typescript
+setContent("");
+```
+
+Again, this looked reasonable.
+
+I didn't want to show September 8's content while the user was asking for September 7.
+
+But clearing the editor created another problem.
+
+---
+
+## Not every change is a user change
+
+The editor was ReactQuill.
+
+I had an `onChange` handler, and my mental model was basically:
+
+```text
+onChange
+   ↓
+User changed something
+```
+
+But that's not necessarily true.
+
+An editor can change because:
+
+```text
+User typed
+```
+
+or because:
+
+```text
+Application changed its value
+```
+
+ReactQuill/Quill provides an event source that can distinguish these cases.
+
+Conceptually:
+
+```typescript
+onChange(content, delta, source)
+```
+
+So I needed to think about:
+
+```text
+source === "user"
+```
+
+versus:
+
+```text
+source === "api"
+```
+
+When my application cleared the editor programmatically, that change could enter the same path as a user edit.
+
+The application effectively did:
+
+```text
+Programmatically clear editor
+        ↓
+Editor reports change
+        ↓
+handleContentChange("")
+        ↓
+hasUnsavedChanges = true
+        ↓
+schedule auto-save
+```
+
+But the user never typed anything.
+
+The application had created a **fake user action**.
+
+That became my first major fix:
+
+```tsx
+onChange={(content, delta, source) => {
+    if (source === "user") {
+        handleContentChange(content);
+    }
+}}
+```
+
+The principle is bigger than ReactQuill:
+
+> **Events tell you that something changed. They don't always tell you why it changed.**
+
+---
+
+## The debounce timer had an identity problem too
+
+There was another issue.
+
+Suppose I edit September 8.
+
+The application schedules:
+
+```text
+Save after 3 seconds
+```
+
+But before those three seconds finish:
+
+```text
+Sep 8 → Sep 7
+```
+
+Now the selected date has changed.
+
+If the delayed callback reads the current state when it executes, the save can accidentally use the new date.
+
+Conceptually, this is dangerous:
+
+```typescript
+setTimeout(() => {
+    save(selectedDate, content);
+}, 3000);
+```
+
+Because `selectedDate` may no longer mean the same thing three seconds later.
+
+The save should remember what it belongs to.
+
+Conceptually:
+
+```typescript
+const dateBeingSaved = selectedDate;
+const contentBeingSaved = content;
+
+setTimeout(() => {
+    save(dateBeingSaved, contentBeingSaved);
+}, 3000);
+```
+
+Now the save job has an identity:
+
+```text
+Save Job
+----------------
+date: Sep 8
+content: "..."
+```
+
+If the user moves to September 7, that job still means:
+
+```text
+Save Sep 8
+```
+
+not:
+
+```text
+Save whatever date is selected now.
+```
+
+This made me realize something important about asynchronous programming:
+
+> **A delayed operation should not lose the identity of the state that created it.**
+
+---
+
+## So was debounce the problem?
+
+Not really.
+
+It would be easy to conclude:
+
+> “Debouncing caused the bug.”
+
+But that would be too convenient.
+
+Debouncing was doing exactly what it was designed to do.
+
+The real problem was that I allowed a delayed operation to interact with mutable application state without properly preserving its context.
+
+Removing debounce might hide the timing issue.
+
+It wouldn't fix the underlying design.
+
+That's an important distinction.
+
+**Don't blame the tool when the real problem is how the tool is being used.**
+
+---
+
+## Fixing the bug made me question the architecture
+
+After fixing the immediate problems, I started asking a bigger question.
+
+Why does writing a diary entry need the server in the critical path?
+
+My original architecture was:
+
+```text
+User
+ ↓
+React
+ ↓
+Zustand
+ ↓
+Network
+ ↓
+Express
+ ↓
+MongoDB
+```
+
+But what does a diary actually need?
+
+If I'm writing:
+
+```text
+I type
+ ↓
+I see my text
+ ↓
+I switch to yesterday
+ ↓
+I see yesterday's entry
+```
+
+Why should opening yesterday depend on a network request?
+
+That question led me toward a **local-first architecture**.
+
+---
+
+## Local-first
+
+Instead of treating MongoDB as the operational database for every interaction, I started thinking about:
+
+```text
+IndexedDB = local operational storage
+
+MongoDB = cloud synchronization
+```
+
+The architecture becomes:
+
+```text
+ReactQuill
+    ↓
+Zustand
+    ↓
+IndexedDB
+    ↓
+Background Sync
+    ↓
+Express
+    ↓
+MongoDB
+```
+
+Now the diary can work locally first.
+
+When I type:
+
+```text
+User types
+    ↓
+Update UI
+    ↓
+Save locally
+    ↓
+Mark sync as pending
+    ↓
+Sync with cloud
+```
+
+The user doesn't have to wait for:
+
+```text
+Internet
+ ↓
+API
+ ↓
+MongoDB
+ ↓
+Response
+```
+
+before their writing feels persisted.
+
+It also naturally improves the offline experience:
+
+```text
+Internet unavailable
+       ↓
+IndexedDB still works
+       ↓
+User keeps writing
+       ↓
+syncStatus = pending
+       ↓
+Internet returns
+       ↓
+Sync to MongoDB
+```
+
+But here's the devil's advocate:
+
+**Local-first is not a magical solution.**
+
+It removes one class of problems while introducing others:
+
+* synchronization
+* conflicts
+* retries
+* stale data
+* multi-device updates
+* failed uploads
+* recovery
+
+So I'm not saying:
+
+> “Local-first is always better.”
+
+I'm saying:
+
+> **The architecture should match the actual requirements of the product.**
+
+For a diary, instant local writing and offline access make a lot of sense.
+
+---
+
+## The backend shouldn't blindly trust the frontend
+
+There was one more lesson.
+
+Even after fixing the frontend, I didn't want the backend to assume that every request was safe.
+
+Imagine an existing diary contains substantial content:
+
+```text
+"I worked on my project..."
+```
+
+and suddenly the backend receives:
+
+```json
+{
+  "content": ""
+}
+```
+
+That could be intentional.
+
+But it could also be a bug.
+
+So the backend can treat certain destructive-looking operations as suspicious.
+
+Conceptually:
+
+```text
+Existing substantial content
++
+Incoming empty content
+=
+Potentially dangerous operation
+```
+
+This is **defense in depth**.
+
+The protection shouldn't exist only here:
+
+```text
+Frontend
+```
+
+It can exist across multiple layers:
+
+```text
+User intent
+     ↓
+Editor
+     ↓
+Application state
+     ↓
+Local persistence
+     ↓
+Backend validation
+     ↓
+Database
+```
+
+If one layer makes a mistake, another layer has a chance to prevent catastrophic data loss.
+
+---
+
+## I also discovered a UX problem
+
+There was another realization that had nothing to do with the bug itself.
+
+If an application automatically saves, it doesn't need to constantly remind the user that it is saving.
+
+Imagine trying to write:
+
+```text
+What happened today?
+What am I feeling?
+What should I write next?
+```
+
+while the interface keeps shouting:
+
+```text
+SAVE
+SYNC
+SAVED
+SYNC
+SAVE
+```
+
+That's unnecessary cognitive noise.
+
+So instead, the status can quietly live in the background:
+
+```text
+142 words · 1 min read       ✓ Saved locally · ☁ Cloud synced
+```
+
+The system communicates what's happening without competing with the actual purpose of the application:
+
+**writing.**
+
+---
+
+## What I got wrong
+
+When I started this project, I thought:
+
+> “It's just a diary.”
+
+That assumption shaped my thinking.
+
+I focused on:
+
+```text
+Create
+Read
+Update
+Delete
+```
+
+But the difficult part wasn't CRUD.
+
+The difficult part was everything happening **between** those operations.
+
+A user can switch dates.
+
+A request can still be running.
+
+State can change.
+
+An editor can update programmatically.
+
+An event can fire.
+
+A debounce timer can still be waiting.
+
+And a database can faithfully execute the wrong instruction.
+
+That is where real software becomes interesting.
+
+---
+
+## What a “simple diary” actually taught me
+
+I started with:
+
+```text
+Diary
+```
+
+I ended up thinking about:
+
+```text
+Editor
+   ↓
+State
+   ↓
+Async operations
+   ↓
+Debouncing
+   ↓
+Local persistence
+   ↓
+Synchronization
+   ↓
+Backend validation
+   ↓
+UX
+```
+
+The project taught me about race conditions, stale state, closures, event sources, data identity, local-first architecture, synchronization, offline behavior, and defense in depth.
+
+But the biggest lesson wasn't technical.
+
+It was this:
+
+> **The complexity of software isn't always visible in the number of features.**
+
+A diary has almost no features.
+
+Yet one simple interaction—switching from one date to another—was enough to expose a system of interacting states and asynchronous operations.
+
+I started the project thinking:
+
+**“It's just a diary.”**
+
+I finished it thinking:
+
+**“Even a diary is a system.”**
+
