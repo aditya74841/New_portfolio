@@ -22,6 +22,10 @@ const Experience = dynamic(() => import("./Experience/Experience"), {
   loading: () => <SectionLoader text="Loading Experience..." />,
 });
 
+const Products = dynamic(() => import("./Products/Products"), {
+  loading: () => <SectionLoader text="Loading Products..." />,
+});
+
 const Portfolio = dynamic(() => import("./Portfolio/Portfolio"), {
   loading: () => <SectionLoader text="Loading Portfolio..." />,
 });
@@ -71,10 +75,10 @@ const HomePage = () => {
           </ErrorBoundary>
         </Suspense>
 
-        {/* 4. Skills */}
-        <Suspense fallback={<SectionLoader text="Loading Skills..." />}>
+        {/* 4. Products */}
+        <Suspense fallback={<SectionLoader text="Loading Products..." />}>
           <ErrorBoundary>
-            <Skills />
+            <Products />
           </ErrorBoundary>
         </Suspense>
 
@@ -85,7 +89,14 @@ const HomePage = () => {
           </ErrorBoundary>
         </Suspense>
 
-        {/* 6. Portfolio */}
+        {/* 6. Skills */}
+        <Suspense fallback={<SectionLoader text="Loading Skills..." />}>
+          <ErrorBoundary>
+            <Skills />
+          </ErrorBoundary>
+        </Suspense>
+
+        {/* 7. Portfolio */}
         <Suspense fallback={<SectionLoader text="Loading Portfolio..." />}>
           <ErrorBoundary>
             <Portfolio />

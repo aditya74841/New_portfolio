@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <pattern id="sketch-grid-curiosity" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e3dfd5" stroke-width="1" />
+    </pattern>
+    <filter id="hand-shadow-curiosity" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#1f2421" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Notebook Background -->
+  <rect width="1200" height="675" fill="#f7f5ed" />
+  <rect width="1200" height="675" fill="url(#sketch-grid-curiosity)" />
+
+  <!-- Outer Frame -->
+  <rect x="25" y="25" width="1150" height="625" fill="none" stroke="#1d2d44" stroke-width="3" rx="8" stroke-dasharray="900 6 300 4" />
+
+  <!-- Title Header -->
+  <text x="60" y="72" font-family="'Courier New', Courier, monospace" font-size="28" font-weight="bold" fill="#1d2d44">Why Seeing Less Makes Us Look More: The Curiosity Gap</text>
+  <line x1="60" y1="88" x2="1140" y2="88" stroke="#1d2d44" stroke-width="3" stroke-linecap="round" />
+  <line x1="60" y1="93" x2="980" y2="93" stroke="#d90429" stroke-width="2" stroke-dasharray="6 4" />
+
+  <!-- LEFT PANEL: THE VISIBILITY SPECTRUM -->
+  <g filter="url(#hand-shadow-curiosity)">
+    <rect x="60" y="120" width="530" height="500" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="85" y="152" font-family="'Courier New', Courier, monospace" font-size="18" font-weight="bold" fill="#1d2d44">📊 The Spectrum of Visibility</text>
+
+    <!-- State 1: Completely Hidden -->
+    <rect x="85" y="172" width="480" height="85" fill="#edf2f4" stroke="#2b2d42" stroke-width="1.8" rx="4" />
+    <text x="100" y="196" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#6c757d">1. Completely Hidden (0% Visible)</text>
+    <text x="100" y="218" font-family="sans-serif" font-size="12" fill="#495057">• Not enough information to establish context or care.</text>
+    <text x="100" y="238" font-family="sans-serif" font-size="12" font-weight="600" fill="#d90429">Result: Indifference (No anchor for the mind to grasp)</text>
+
+    <!-- State 2: Completely Visible -->
+    <rect x="85" y="272" width="480" height="85" fill="#edf2f4" stroke="#2b2d42" stroke-width="1.8" rx="4" />
+    <text x="100" y="296" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#2b2d42">2. Completely Visible (100% Visible)</text>
+    <text x="100" y="318" font-family="sans-serif" font-size="12" fill="#495057">• All information is handed over immediately.</text>
+    <text x="100" y="338" font-family="sans-serif" font-size="12" font-weight="600" fill="#6c757d">Result: Resolved certainty (Nothing left to explore/predict)</text>
+
+    <!-- State 3: Partially Revealed (THE SWEET SPOT) -->
+    <rect x="85" y="372" width="480" height="120" fill="#ffe5ec" stroke="#d90429" stroke-width="2.5" rx="5" />
+    <text x="100" y="398" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#d90429">⚡ 3. Partially Revealed (The Sweet Spot)</text>
+    <text x="100" y="422" font-family="sans-serif" font-size="13" font-weight="600" fill="#900c3f">Enough to recognize + Missing piece to wonder</text>
+    <text x="100" y="444" font-family="sans-serif" font-size="12" fill="#2b2d42">• A shadow in a movie · A wrapped gift · A cliffhanger</text>
+    <text x="100" y="468" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1b4332">Result: Active Curiosity &amp; Heightened Attention</text>
+
+    <!-- Bottom Takeaway Left -->
+    <rect x="85" y="508" width="480" height="92" fill="#f8f9fa" stroke="#2b2d42" stroke-width="1.5" stroke-dasharray="4 3" rx="4" />
+    <text x="105" y="534" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="bold" fill="#1d2d44">KEY PRINCIPLE:</text>
+    <text x="105" y="556" font-family="sans-serif" font-size="12" fill="#2b2d42">"Less information does not mean less work for the brain."</text>
+    <text x="105" y="578" font-family="sans-serif" font-style="italic" font-size="12" fill="#d90429">It often forces the mind to work harder to complete the picture.</text>
+  </g>
+
+  <!-- RIGHT PANEL: THE COGNITIVE ENGINE -->
+  <g filter="url(#hand-shadow-curiosity)">
+    <rect x="620" y="120" width="520" height="500" fill="#fffef9" stroke="#2b2d42" stroke-width="2.5" rx="6" />
+    <text x="645" y="152" font-family="'Courier New', Courier, monospace" font-size="18" font-weight="bold" fill="#1b4332">🧠 How the Brain Processes Partial Data</text>
+
+    <!-- Step A: Recognition Engine -->
+    <rect x="645" y="172" width="470" height="74" fill="#d8f3dc" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="660" y="196" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#1b4332">1. The Recognition Anchor</text>
+    <text x="660" y="218" font-family="sans-serif" font-size="12" fill="#2d6a4f">Brain receives initial clue → establishes reference point.</text>
+    <text x="660" y="234" font-family="sans-serif" font-size="11" font-weight="600" fill="#1b4332">"I know something is there."</text>
+
+    <!-- Arrow down -->
+    <path d="M 880 246 L 880 262" stroke="#2b9348" stroke-width="2.5" />
+
+    <!-- Step B: The Prediction Gap -->
+    <rect x="645" y="262" width="470" height="96" fill="#caf0f8" stroke="#0077b6" stroke-width="2" rx="4" />
+    <text x="660" y="286" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#03045e">2. The Prediction Engine Activates</text>
+    <text x="660" y="308" font-family="sans-serif" font-size="12" fill="#0077b6">The brain hates unresolved patterns. It guesses the rest:</text>
+    <text x="660" y="328" font-family="'Courier New', Courier, monospace" font-size="12" fill="#03045e">[ Seen Info ] + [ Missing Gap ] → [ Anticipation ]</text>
+    <text x="660" y="346" font-family="sans-serif" font-size="11" font-weight="600" fill="#023e8a">Imagination fills in what sight cannot confirm.</text>
+
+    <!-- Arrow down -->
+    <path d="M 880 358 L 880 374" stroke="#0077b6" stroke-width="2.5" />
+
+    <!-- Step C: Anticipation vs Realization -->
+    <rect x="645" y="374" width="470" height="96" fill="#edf2f4" stroke="#2b2d42" stroke-width="1.8" rx="4" />
+    <text x="660" y="398" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="bold" fill="#1d2d44">3. Anticipation vs. Experience</text>
+    <text x="660" y="420" font-family="sans-serif" font-size="12" fill="#333">• Before the reveal: Infinite possibilities &amp; curiosity.</text>
+    <text x="660" y="440" font-family="sans-serif" font-size="12" fill="#333">• After the reveal: One concrete answer. Mystery ends.</text>
+    <text x="660" y="458" font-family="sans-serif" font-size="11" font-style="italic" fill="#555">"The gap gives our imagination somewhere to go."</text>
+
+    <!-- Result Banner Right -->
+    <rect x="645" y="485" width="470" height="115" fill="#e8f5e9" stroke="#2b9348" stroke-width="2" rx="4" />
+    <text x="665" y="512" font-family="'Courier New', Courier, monospace" font-size="15" font-weight="bold" fill="#1b4332">✔ THE CORE INSIGHT</text>
+    <text x="665" y="536" font-family="sans-serif" font-size="12" fill="#2b2d42">• Complete info: we simply process what is there.</text>
+    <text x="665" y="558" font-family="sans-serif" font-size="12" fill="#2b2d42">• Partial info: we actively imagine what is not there.</text>
+    <text x="665" y="582" font-family="sans-serif" font-weight="bold" font-size="12" fill="#1b4332">"Seeing less gives us just enough to make us wonder."</text>
+  </g>
+</svg>
+
